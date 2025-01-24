@@ -3,6 +3,9 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
+from langchain.chains import ConversationalRetrievalChain
+from langchain_google_genai import ChatGoogleGenerativeAI
+import pyinputplus as pyip
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -32,11 +35,42 @@ class DocumentProcessor:
         )
         return FAISS.from_documents(texts, embeddings)
 
+MODEL = "gemini-2.0-flash-exp"
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+class Chatbot:
+    def __init__(self, vector_store):
+        self.vector_store = vector_store
+        self.chat_chain = self._create_chat_chain()
+    
+    def _create_chat_chain(self):
+        llm = ChatGoogleGenerativeAI(
+            model=MODEL,
+            google_api_key=GEMINI_API_KEY,
+            temperature=0.7,
+            system_prompt="You are a 1337 Coding School Staff member. You should provide accurate and helpful information about the school based on the provided context. If you don't know the answer or can't find it in the context, you can say so and offer to find out more information.",
+        )
+        
+        return ConversationalRetrievalChain.from_llm(
+            llm=llm,
+            retriever=self.vector_store.as_retriever(),
+            return_source_documents=False,
+        )
+    
+    def get_response(self, query, chat_history=[]):
+        try:
+            response = self.chat_chain.invoke({
+                "question": query, 
+                "chat_history": chat_history
+            })
+            return response['answer']
+        except Exception as e:
+            return f"Sorry, I encountered an error: {str(e)}"
+    
 
 def main():
     try:
         doc_processor = DocumentProcessor("data/knowledgeBase.pdf")
-        
+        chatbot = Chatbot(doc_processor.vector_store)
     except Exception as e:
         print(f"Application failed to start: {str(e)}")
 
