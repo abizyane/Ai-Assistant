@@ -12,23 +12,32 @@ load_dotenv()
 
 class DocumentProcessor:
     def __init__(self, pdf_path):
-        self.pdf_path = self._validate_pdf_path(pdf_path)
+        self.path = self._validate_pdf_path(pdf_path)
         self.vector_store = self._initialize_vector_store()
     
     def _validate_pdf_path(self, pdf_path):
         if not os.path.exists(pdf_path):
             raise FileNotFoundError(f"PDF file not found at: {pdf_path}")
         return pdf_path
-    
-    def _load_and_split_documents(self):
-        loader = PyPDFLoader(self.pdf_path)
-        documents = loader.load()
+
+    def load_documents(self):
+        documents = []
+        for file_name in os.listdir(self.path):
+            if file_name.endswith('.pdf'):
+                file_path = os.path.join(self.path, file_name)
+                loader = PyPDFLoader(file_path)
+                docs = loader.load()
+                documents.extend(docs)
+        return documents
+
+    def split_documents(self):
+        documents = self.load_documents()
         
         splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
         return splitter.split_documents(documents)
     
     def _initialize_vector_store(self):
-        texts = self._load_and_split_documents()
+        texts = self.split_documents()
         embeddings = HuggingFaceEmbeddings(
             model_name="sentence-transformers/all-MiniLM-L6-v2",
             model_kwargs={'device': 'cpu'}
@@ -65,12 +74,15 @@ class Chatbot:
             return response['answer']
         except Exception as e:
             return f"Sorry, I encountered an error: {str(e)}"
-    
+
+DATA_DIR = "data/"
 
 def main():
     try:
-        doc_processor = DocumentProcessor("data/knowledgeBase.pdf")
+        doc_processor = DocumentProcessor(DATA_DIR)
         chatbot = Chatbot(doc_processor.vector_store)
+        chatbot.chat()
+        
     except Exception as e:
         print(f"Application failed to start: {str(e)}")
 
