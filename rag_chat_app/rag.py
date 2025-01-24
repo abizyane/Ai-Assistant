@@ -46,6 +46,7 @@ class DocumentProcessor:
 
 MODEL = "gemini-2.0-flash-exp"
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
 class Chatbot:
     def __init__(self, vector_store):
         self.vector_store = vector_store
@@ -74,6 +75,30 @@ class Chatbot:
             return response['answer']
         except Exception as e:
             return f"Sorry, I encountered an error: {str(e)}"
+    
+    def chat(self):
+        print("Hello! I'm a virtual assistant for the 1337 school. Ask me anything about the school.")
+        print("Type 'exit', 'quit', or 'bye' to end the conversation.")
+        
+        chat_history = []
+        while True:
+            try:
+                query = pyip.inputStr(prompt="You: ", blank=False)
+                
+                if query.lower() in ['exit', 'quit', 'bye']:
+                    print("Assistant: Goodbye!")
+                    break
+                
+                response = self.get_response(query, chat_history)
+                print(f"Assistant: {response}")
+                
+                chat_history.append((query, response))
+                
+            except KeyboardInterrupt:
+                print("\nGoodbye!")
+                break
+            except Exception as e:
+                print(f"An error occurred: {str(e)}")
 
 DATA_DIR = "data/"
 
