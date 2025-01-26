@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from .models import Conversation, Message
 from .serializers import ConversationSerializer, ConversationListSerializer, MessageSerializer
-from .services.rag_service import RAGService
+from .rag_service import RAGService
 
 class ConversationView(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated]
@@ -59,35 +59,23 @@ class SendMessageView(generics.CreateAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Get or create conversation
-        if conversation_id:
-            conversation = get_object_or_404(
-                Conversation.objects.filter(user=request.user), 
-                id=conversation_id
-            )
-        else:
-            conversation = Conversation.objects.create(user=request.user)
-
         try:
+            if conversation_id:
+                conversation = get_object_or_404(
+                    Conversation.objects.filter(user=request.user), 
+                    conversation_id=conversation_id
+                )
+            else:
+                conversation = Conversation.objects.create(
+                    user=request.user,
+                    title=message_content[:50]  # Use first 50 chars of message as title
+                )
+
             response = self.rag_service.get_response(message_content, conversation)
-
-            # Update conversation timestamp
-            conversation.save()  # This updates the updated_at field
-
             return Response({
-                'conversation_id': conversation.id,
-                'user_message': {
-                    'content': message_content,
-                    'is_user': True,
-                    'created_at': conversation.messages.latest('created_at').created_at
-                },
-                'assistant_message': {
-                    'content': response,
-                    'is_user': False,
-                    'created_at': conversation.messages.latest('created_at').created_at
-                }
+                'conversation_id': conversation.conversation_id,
+                'response': response
             })
-
         except Exception as e:
             return Response(
                 {'error': str(e)}, 
