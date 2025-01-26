@@ -57,7 +57,7 @@ class Chatbot:
             model=MODEL,
             google_api_key=GEMINI_API_KEY,
             temperature=0.7,
-            system_prompt="You are a 1337 Coding School Staff member. You should provide accurate and helpful information about the school based on the provided context. If you don't know the answer or can't find it in the context, you can say so and offer to find out more information.",
+            system_prompt="You are a 1337 Coding School Staff member. You should provide accurate and helpful information about the school based on the provided context. If you don't know the answer, you have to say 'I don't know, im a 1337 Ai Assistant and i can only answer questions related to the school'.",
         )
         
         return ConversationalRetrievalChain.from_llm(
