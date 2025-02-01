@@ -1,7 +1,7 @@
 import os
 from typing import List, Tuple
 from django.conf import settings
-from ..models import Message, Conversation
+from .models import Message, Conversation
 import google.generativeai as genai
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -40,7 +40,7 @@ class RAGService:
                 documents.extend(loader.load())
 
         text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=500,
+            chunk_size=300,
             chunk_overlap=50,
         )
         texts = text_splitter.split_documents(documents)
@@ -53,7 +53,7 @@ class RAGService:
         self.vector_store = FAISS.from_documents(texts, embeddings)
 
     def _get_relevant_context(self, query: str) -> str:
-        docs = self.vector_store.similarity_search(query, k=3)
+        docs = self.vector_store.similarity_search(query, k=10)
         return "\n".join(doc.page_content for doc in docs)
 
     def _format_chat_history(self, conversation: Conversation) -> List[Tuple[str, str]]:
@@ -66,7 +66,7 @@ class RAGService:
         history_text = ""
         if chat_history:
             history_text = "Previous conversation:\n"
-            for question, answer in chat_history[-3:]:
+            for question, answer in chat_history[-5:]:
                 history_text += f"User: {question}\nAssistant: {answer}\n"
 
         prompt = f"""You are a helpful assistant for the 1337 coding school. Use the following context to answer the question.
