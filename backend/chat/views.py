@@ -68,7 +68,7 @@ class SendMessageView(generics.CreateAPIView):
             else:
                 conversation = Conversation.objects.create(
                     user=request.user,
-                    title=message_content[:50]  # Use first 50 chars of message as title
+                    title=message_content[:100]
                 )
 
             response = self.rag_service.get_response(message_content, conversation)
