@@ -8,4 +8,3 @@ urlpatterns = [
     path('delmessage/<int:id>/', DeleteMessageView.as_view(), name='delete_message'),
     path('sendmessage/', SendMessageView.as_view(), name='send_message'),
 ]
-
