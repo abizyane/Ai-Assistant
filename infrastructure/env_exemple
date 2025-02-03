@@ -1,0 +1,14 @@
+POSTGRES_DB = 'astropong'
+POSTGRES_USER = 'astrouser'
+POSTGRES_PASSWORD = 'astropassword'
+POSTGRES_HOST = 'postgres-db'
+POSTGRES_PORT = '5432'
+PGDATA = '/var/lib/postgresql/data'
+HOST_URL='https://10.13.2.13'
+API_URL='10.13.2.13/api'
+
+# Backend
+BACKEND_HOST = 'backend'
+BACKEND_PORT = '8000'
+BACKEND_SECRET_KEY = ''
+BACKEND_ALLOWED_HOSTS = '*'

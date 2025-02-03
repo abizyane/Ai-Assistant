@@ -68,7 +68,7 @@ class SendMessageView(generics.CreateAPIView):
             else:
                 conversation = Conversation.objects.create(
                     user=request.user,
-                    title=message_content[:100]
+                    title=message_content[:200]
                 )
 
             response = self.rag_service.get_response(message_content, conversation)
