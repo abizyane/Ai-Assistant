@@ -4,7 +4,7 @@ C_YELLOW = \033[1;33m
 C_RESET = \033[0m
 
 DC_CMD = @docker compose -f ./docker-compose.yml
-DATA_PATH = ./infrastructure/database/data
+DATA_PATH = ./database/data
 
 all: build up
 
@@ -43,13 +43,6 @@ clean: down
 
 fclean: clean
 	@echo "${C_RED}Full cleaning...${C_RESET}"
-	@rm -rf ./frontend/app/node_modules
-	@rm -rf ./frontend/app/.next
-	@rm -rf ./frontend/app/package-lock.json
-	@rm -rf ./frontend/app/components.json
-	@rm -rf ./frontend/app/yarn.lock
-	@find ./backend/app/ -name 'migrations' -type d -depth -exec rm -rf {} \;
-	@find ./backend/app -name '__pycache__' -type d -depth -exec rm -rf {} \;
 	@find . -name ".DS_Store" -delete
 	@docker system prune -af --volumes > /dev/null 2>&1
 	@echo "${C_RED}Full cleaning Done!${C_RESET}"
