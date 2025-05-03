@@ -1,1 +1,1 @@
-# 1337_RAG_App
+# Ai_Assistant

@@ -1,0 +1,8 @@
+POSTGRES_DB = 'ai_assistant'
+POSTGRES_USER = 'ai_assistant'
+POSTGRES_PASSWORD = 'new_password_here'
+POSTGRES_HOST = 'postgres-db'
+POSTGRES_PORT = '5432'
+PGDATA = '/var/lib/postgresql/data'
+
+GEMINI_API_KEY = 'your_gemini_api_key'
