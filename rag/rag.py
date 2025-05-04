@@ -1,8 +1,6 @@
 import os
 from typing import List, Tuple, Dict, Any, Optional
 from pathlib import Path
-import time
-
 from dotenv import load_dotenv
 import pyinputplus as pyip
 import google.generativeai as genai
@@ -13,10 +11,8 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain.chains import ConversationalRetrievalChain
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-# Load environment variables
 load_dotenv()
 
-# Configuration constants
 DEFAULT_CHUNK_SIZE = 500
 DEFAULT_CHUNK_OVERLAP = 50
 DEFAULT_TEMPERATURE = 0.7
@@ -166,7 +162,6 @@ class RAGAssistant:
             return
             
         try:
-            # Initialize document processing pipeline
             document_loader = PDFDocumentLoader(data_dir)
             documents = document_loader.load()
             
@@ -175,7 +170,6 @@ class RAGAssistant:
             
             embedding_model = EmbeddingModel()
             
-            # Check if vector store already exists
             store_path = Path(VECTOR_STORE_PATH)
             
             if store_path.exists():
@@ -194,7 +188,6 @@ class RAGAssistant:
                 self.vector_store = FAISSVectorStore(chunks, embedding_model.model)
                 self.vector_store.save(str(store_path))
             
-            # Initialize LLM components
             chat_llm = ChatLLM()
             self.chat_chain = ChatChain(chat_llm, self.vector_store)
             
@@ -237,7 +230,7 @@ class RAGAssistant:
 
 def main():
     try:
-        data_dir = os.getenv("DATA_DIR", "knowledge_base/")
+        data_dir = os.getenv("DATA_DIR", "rag/knowledge_base")
         assistant = RAGAssistant(data_dir)
         assistant.run_chat_session()
     except Exception as e:
