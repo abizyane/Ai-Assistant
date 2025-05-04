@@ -1,11 +1,9 @@
-python-dotenv==1.0.0
+python-dotenv
+pyinputplus
+google-generativeai
 langchain
 langchain-community
-langchain-google-genai
 langchain-huggingface
-google-generativeai
+langchain-google-genai
 faiss-cpu
 sentence-transformers
-pyinputplus
-pypdf
-# psycopg2-binary==2.9.9

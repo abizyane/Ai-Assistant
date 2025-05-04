@@ -3,66 +3,68 @@ C_GREEN = \033[1;32m
 C_YELLOW = \033[1;33m
 C_RESET = \033[0m
 
-DC_CMD = @docker compose -f ./docker-compose.yml
-DATA_PATH = ./database/data
+include .env
+export
 
-all: build up
+IMAGE_NAME = rag-app
+CONTAINER_NAME = rag-container
+KNOWLEDGE_BASE_PATH = ./rag/knowledge_base
+
+all: build run
 
 build:
-	@echo "${C_GREEN}Starting Building...${C_RESET}"
-	@mkdir -p $(DATA_PATH)
-	$(DC_CMD) build
+	@echo "${C_GREEN}Building RAG application...${C_RESET}"
+	@docker build -t $(IMAGE_NAME) \
+        --build-arg GEMINI_API_KEY=$(GEMINI_API_KEY) \
+        .
+	@echo "${C_GREEN}Build completed!${C_RESET}"
 
-up:
-	@echo "${C_GREEN}Starting up services...${C_RESET}"
-	$(DC_CMD) up -d
-	@echo "${C_GREEN}Done!${C_RESET}"
+run:
+	@echo "${C_GREEN}Starting RAG application...${C_RESET}"
+	@docker run -it --rm \
+        --name $(CONTAINER_NAME) \
+        -e GEMINI_API_KEY=$(GEMINI_API_KEY) \
+        -v $(KNOWLEDGE_BASE_PATH):/app/rag/knowledge_base \
+        $(IMAGE_NAME)
+	@echo "${C_GREEN}Application exited.${C_RESET}"
 
-down: 
-	@echo "${C_RED}Stopping services...${C_RESET}"
-	$(DC_CMD) down
+stop:
+	@echo "${C_RED}Stopping RAG application...${C_RESET}"
+	@docker stop $(CONTAINER_NAME) 2>/dev/null || true
+	@echo "${C_RED}Stopped!${C_RESET}"
 
 state:
-	@echo "${C_YELLOW}Checking state...${C_RESET}"
-	$(DC_CMD) ps
-
-restart:
-	@echo "${C_YELLOW}Restarting services...${C_RESET}"
-	$(DC_CMD) restart
+	@echo "${C_YELLOW}Checking container state...${C_RESET}"
+	@docker ps -a | grep $(CONTAINER_NAME) || echo "Container not running"
 
 logs:
-	@echo "${C_YELLOW}Showing logs...${C_RESET}"
-	$(DC_CMD) logs -f
+	@echo "${C_YELLOW}Showing container logs...${C_RESET}"
+	@docker logs -f $(CONTAINER_NAME)
 
-clean: down
+clean: stop
 	@echo "${C_RED}Cleaning...${C_RESET}"
-	@docker rm $$(docker ps -a -q) 2> /dev/null || true
-	@docker rmi $$(docker images -q) 2> /dev/null || true
-	@docker network prune -f > /dev/null 2>&1
+	@docker rm $(CONTAINER_NAME) 2>/dev/null || true
+	@docker rmi $(IMAGE_NAME) 2>/dev/null || true
 	@echo "${C_RED}Cleaning Done!${C_RESET}"
 
 fclean: clean
 	@echo "${C_RED}Full cleaning...${C_RESET}"
-	@find . -name ".DS_Store" -delete
-	@docker system prune -af --volumes > /dev/null 2>&1
+	@docker system prune -f
 	@echo "${C_RED}Full cleaning Done!${C_RESET}"
 
-dclean: fclean
-	@rm -rf $(DATA_PATH)
-	@echo "${C_RED}Postgres data Removed!${C_RESET}"
+rebuild: clean build run
 
-help: 
+help:
 	@echo "Usage: make [command]"
 	@echo "Commands:"
-	@echo "  build: Build the services"
-	@echo "  up: Start the services"
-	@echo "  down: Stop the services"
-	@echo "  state: Check the state of the services"
-	@echo "  restart: Restart the services"
-	@echo "  logs: Show the logs of the services"
-	@echo "  clean: Stops and remove the services"
-	@echo "  fclean: Clean and remove docker cache and volumes"
-	@echo "  dclean: Fclean and remove the database"
+	@echo "  build: Build the RAG application Docker image"
+	@echo "  run: Run the RAG application in a container"
+	@echo "  stop: Stop the RAG application container"
+	@echo "  state: Check the state of the container"
+	@echo "  logs: Show the logs of the container"
+	@echo "  clean: Remove the container and image"
+	@echo "  fclean: Clean and remove Docker cache"
+	@echo "  rebuild: Clean, rebuild and run the application"
 	@echo "  help: Show this help message"
 
-re: fclean all
+.PHONY: all build run stop state logs clean fclean rebuild help
