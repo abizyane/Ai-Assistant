@@ -16,4 +16,4 @@ ENV GEMINI_API_KEY=${GEMINI_API_KEY}
 
 ENV PYTHONPATH=/app
 
-CMD ["python", "/app/rag/rag.py"]
+ENTRYPOINT ["python", "/app/rag/main.py"]
