@@ -1,9 +1,12 @@
 python-dotenv
 pyinputplus
 google-generativeai
+PyYAML>=6.0
+Cython
 langchain
 langchain-community
 langchain-huggingface
 langchain-google-genai
-faiss-cpu
 sentence-transformers
+psycopg2-binary
+langchain-postgres
