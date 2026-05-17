@@ -1,3 +1,46 @@
+# Virtual environment
 .venv
 
+# Environment secrets
 .env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pycache
+
+# Test / coverage
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Type checking
+.mypy_cache/
+
+# Linting
+.ruff_cache/
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# Eval run outputs (generated; keep .gitkeep only)
+evals/runs/*.json
+
+# HuggingFace model cache
+.hf_cache/
+hf_cache/
+
+# Docker
+.docker/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.sisyphus/
