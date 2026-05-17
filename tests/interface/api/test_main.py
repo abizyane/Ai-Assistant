@@ -7,7 +7,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from src.domain.entities.answer import AnswerCitation, AnswerWithCitations
+from src.domain.entities.answer import AnswerWithCitations
+from src.domain.entities.citation import Citation
 from src.domain.entities.session import Message, MessageRole
 from src.domain.ports.dto import IngestionReport
 from src.interface.api.main import app
@@ -26,7 +27,7 @@ def _make_answer(text: str = "hello world") -> AnswerWithCitations:
 def _make_answer_with_citation() -> AnswerWithCitations:
     return AnswerWithCitations(
         text="see [ref-1]",
-        citations=[AnswerCitation(chunk_id="abc", source="doc.pdf", page=1, marker="[ref-1]")],
+        citations=[Citation(chunk_id="abc", source="doc.pdf", page=1, marker="[ref-1]")],
         language="en",
         tokens_in=20,
         tokens_out=8,

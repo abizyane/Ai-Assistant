@@ -6,6 +6,7 @@ import uuid
 import pytest
 from pydantic import ValidationError
 
+from src.domain.entities.answer import Answer
 from src.domain.entities.chunk import Chunk
 from src.domain.entities.citation import Citation
 from src.domain.entities.document import Document
@@ -110,6 +111,27 @@ class TestCitation:
             score=0.85,
         )
         assert c.score == pytest.approx(0.85)
+
+
+class TestAnswer:
+    def test_answer_citations_empty_by_default(self) -> None:
+        a = Answer(query_id=uuid.uuid4(), text="The answer is 42.", confidence=0.9)
+        assert a.citations == []
+
+    def test_answer_with_citations(self) -> None:
+        cit = Citation(
+            chunk_id=uuid.uuid4(),
+            document_id=uuid.uuid4(),
+            source_path="/doc.pdf",
+            snippet="context",
+            score=0.7,
+        )
+        a = Answer(query_id=uuid.uuid4(), text="See above.", confidence=0.5, citations=[cit])
+        assert len(a.citations) == 1
+
+    def test_answer_confidence_out_of_range_raises(self) -> None:
+        with pytest.raises(ValidationError):
+            Answer(query_id=uuid.uuid4(), text="x", confidence=2.0)
 
 
 class TestSession:
