@@ -117,7 +117,7 @@ async def chat_sse(body: ChatRequest, agent: AgentDep) -> StreamingResponse:
     async def _event_generator() -> AsyncGenerator[str, None]:
         final_answer: Any = None
         try:
-            async with asyncio.timeout(60.0):
+            async with asyncio.timeout(180.0):
                 async for event in agent.astream_events(state, version="v2"):
                     etype = event["event"]
                     if (
@@ -162,7 +162,7 @@ async def chat_sync(body: ChatRequest, agent: AgentDep) -> SyncChatResponse:
         state["language"] = body.language
 
     try:
-        result: dict[str, Any] = await asyncio.wait_for(agent.ainvoke(state), timeout=60.0)
+        result: dict[str, Any] = await asyncio.wait_for(agent.ainvoke(state), timeout=180.0)
     except TimeoutError:
         raise HTTPException(status_code=504, detail="Agent timed out") from None
     answer = result.get("final_answer")

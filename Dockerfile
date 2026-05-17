@@ -48,8 +48,8 @@ ENV HOME=/tmp
 ENV HF_HOME=/tmp/hf_cache
 ENV XDG_CACHE_HOME=/tmp/hf_cache
 
-# Grant the non-root user write access to the app directory
-RUN chown -R rag:rag /app
+# Grant the non-root user write access to the app directory and HF model cache
+RUN chown -R rag:rag /app && mkdir -p /tmp/hf_cache && chown -R rag:rag /tmp/hf_cache
 # Run as non-root
 USER rag
 

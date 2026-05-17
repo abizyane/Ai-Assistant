@@ -74,14 +74,17 @@ def ingest(
 ) -> None:
     """Ingest documents from [cyan]PATH[/cyan] into the vector store.
 
-    Supports recursive PDF discovery when PATH is a directory.
+    Supports PDF, Markdown, and HTML files (discovered recursively for directories).
     Shows a per-file progress bar and a summary table on completion.
     """
     settings = build_settings()
     use_case = build_ingest_use_case(settings)
 
+    _supported = (".pdf", ".md", ".html")
     if path.is_dir():
-        source_files: list[Path] = sorted(path.rglob("*.pdf"))
+        source_files: list[Path] = sorted(
+            f for suffix in _supported for f in path.rglob(f"*{suffix}")
+        )
     elif path.is_file():
         source_files = [path]
     else:
@@ -89,7 +92,7 @@ def ingest(
         raise typer.Exit(code=1)
 
     if not source_files:
-        console.print("[yellow]No PDF files found.[/yellow]")
+        console.print("[yellow]No supported files found (.pdf, .md, .html).[/yellow]")
         raise typer.Exit(code=0)
 
     console.print(f"[bold]Ingesting {len(source_files)} file(s) from[/bold] {path}")
