@@ -184,12 +184,17 @@ def build_llm(settings: Settings | None = None) -> LLMPort:
     """
     s = settings or build_settings()
     provider = s.llm.provider.lower()
-    if provider == "openai":
+    if provider in {"openai", "openrouter", "nvidia"}:
+        if provider == "openrouter" and not s.llm.base_url:
+            s.llm.base_url = "https://openrouter.ai/api/v1"
+        elif provider == "nvidia" and not s.llm.base_url:
+            s.llm.base_url = "https://integrate.api.nvidia.com/v1"
         return OpenAILLM(s)
     if provider == "gemini":
         return GeminiLLM(s)
     raise ValueError(
-        f"Unknown LLM provider: {provider!r}. Expected 'gemini' or 'openai'."
+        f"Unknown LLM provider: {provider!r}. "
+        "Expected 'gemini', 'openai', 'openrouter', or 'nvidia'."
     )
 
 

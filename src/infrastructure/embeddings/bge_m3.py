@@ -38,6 +38,7 @@ class BGEM3Embedder:
         self._settings = settings
         self._model: Any = None
         self._lock = threading.Lock()
+        self._inference_lock = threading.Lock()
 
     @property
     def dimension(self) -> int:
@@ -85,13 +86,14 @@ class BGEM3Embedder:
         """
         self._ensure_model_loaded()
         batch_size = self._settings.embedding.batch_size
-        raw: Any = self._model.encode(
-            texts,
-            batch_size=batch_size,
-            return_dense=True,
-            return_sparse=False,
-            return_colbert_vecs=False,
-        )
+        with self._inference_lock:
+            raw: Any = self._model.encode(
+                texts,
+                batch_size=batch_size,
+                return_dense=True,
+                return_sparse=False,
+                return_colbert_vecs=False,
+            )
         dense: list[list[float]] = raw["dense_vecs"].tolist()
         return dense
 

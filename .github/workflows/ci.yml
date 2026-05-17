@@ -1,0 +1,314 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+    tags: ["**"]
+  pull_request:
+    branches: [master, main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.13"
+  UV_VERSION: "latest"
+
+jobs:
+  lint:
+    name: Lint & Type-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        run: uv python install ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies (dev)
+        run: uv sync --frozen --group dev
+        env:
+          RAG_LLM__API_KEY: test
+
+      - name: ruff format check
+        run: uv run ruff format --check src/
+        env:
+          RAG_LLM__API_KEY: test
+
+      - name: ruff lint
+        run: uv run ruff check src/
+        env:
+          RAG_LLM__API_KEY: test
+
+      - name: mypy strict
+        run: uv run mypy --strict src/
+        env:
+          RAG_LLM__API_KEY: test
+
+  test:
+    name: Tests (unit + application)
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: raguser
+          POSTGRES_PASSWORD: ragpassword
+          POSTGRES_DB: ragdb
+        options: >-
+          --health-cmd "pg_isready -U raguser -d ragdb"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        run: uv python install ${{ env.PYTHON_VERSION }}
+
+      - name: Cache HuggingFace models
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-models-bge-m3-v1-bge-reranker-v2-m3-v1
+          restore-keys: |
+            hf-models-bge-m3-v1-
+
+      - name: Install dependencies (dev)
+        run: uv sync --frozen --group dev
+        env:
+          RAG_LLM__API_KEY: test
+          RAG_VECTORSTORE__DATABASE_URL: postgresql+asyncpg://raguser:ragpassword@localhost:5432/ragdb
+
+      - name: Run unit + application tests
+        run: >-
+          uv run pytest
+          -m "not e2e and not integration"
+          --cov=src
+          --cov-report=term-missing
+          --cov-fail-under=75
+          -v
+        env:
+          RAG_LLM__API_KEY: test
+          RAG_VECTORSTORE__DATABASE_URL: postgresql+asyncpg://raguser:ragpassword@localhost:5432/ragdb
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: htmlcov/
+          if-no-files-found: ignore
+
+  eval:
+    name: Eval (smoke dataset validation)
+    # WHY NO LIVE RAGAS:
+    # Ragas metrics (faithfulness, answer_relevancy, context_precision, context_recall,
+    # answer_correctness) all require real LLM API calls to score each question. No
+    # production API key is exposed in public CI to avoid accidental spend and keep the
+    # pipeline key-free. Live eval is deferred to:
+    #   • manual runs:  make eval  (requires RAG_LLM__API_KEY in local .env)
+    #   • nightly CI:   a scheduled workflow with the key stored as a repository secret
+    # This job instead validates two things that need zero LLM access:
+    #   1. The smoke dataset has correct JSON schema (all required fields, right types).
+    #   2. The eval pipeline plumbing is wired correctly: Settings → EvalSettings
+    #      thresholds → check_thresholds() returns the expected pass/fail verdict.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        run: uv python install ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies (dev)
+        run: uv sync --frozen --group dev
+        env:
+          RAG_LLM__API_KEY: test
+
+      - name: Validate smoke eval dataset schema
+        run: |
+          uv run python - <<'EOF'
+          import json
+          import sys
+          from pathlib import Path
+
+          REQUIRED_FIELDS = {"query", "ground_truth_answer", "ground_truth_contexts"}
+          FAITHFULNESS_SMOKE_GATE = 0.70
+          dataset_path = Path("tests/fixtures/eval_smoke.jsonl")
+
+          rows = []
+          with dataset_path.open(encoding="utf-8") as fh:
+              for lineno, line in enumerate(fh, 1):
+                  stripped = line.strip()
+                  if not stripped:
+                      continue
+                  try:
+                      row = json.loads(stripped)
+                  except json.JSONDecodeError as exc:
+                      print(f"ERROR line {lineno}: invalid JSON — {exc}", file=sys.stderr)
+                      sys.exit(1)
+                  missing = REQUIRED_FIELDS - row.keys()
+                  if missing:
+                      print(f"ERROR line {lineno}: missing fields {missing}", file=sys.stderr)
+                      sys.exit(1)
+                  if not isinstance(row["ground_truth_contexts"], list):
+                      print(
+                          f"ERROR line {lineno}: 'ground_truth_contexts' must be a list",
+                          file=sys.stderr,
+                      )
+                      sys.exit(1)
+                  rows.append(row)
+
+          if len(rows) == 0:
+              print("ERROR: dataset is empty", file=sys.stderr)
+              sys.exit(1)
+
+          print(f"OK  {len(rows)} rows validated — schema valid")
+          print(f"    faithfulness smoke gate: {FAITHFULNESS_SMOKE_GATE} (enforced when LLM eval runs)")
+          print("    Skipping live Ragas eval — no LLM API key in CI (no real API calls)")
+          EOF
+        env:
+          RAG_LLM__API_KEY: test
+
+      - name: Eval threshold wiring — pass case
+        run: |
+          uv run python - <<'EOF'
+          # Verify Settings→EvalSettings→check_thresholds pipeline with scores that
+          # PASS every threshold. No LLM calls — pure plumbing test.
+          import sys
+          sys.path.insert(0, ".")
+
+          from datetime import datetime, timezone
+
+          from src.config.settings import Settings
+          from src.domain.entities.evaluation import EvaluationReport
+          from src.application.use_cases.evaluate import check_thresholds
+
+          # Load settings from env; defaults: faithfulness=0.85, answer_relevancy=0.80,
+          # context_precision=0.75, context_recall=0.70, answer_correctness=0.70
+          settings = Settings()
+
+          # Hand-crafted scores that comfortably exceed every default threshold
+          aggregate = {
+              "faithfulness": 0.92,
+              "answer_relevancy": 0.88,
+              "context_precision": 0.82,
+              "context_recall": 0.78,
+              "answer_correctness": 0.80,
+          }
+          report = EvaluationReport(
+              timestamp=datetime.now(timezone.utc),
+              dataset_path="tests/fixtures/eval_smoke.jsonl",
+              sample_size=3,
+              per_question=[],
+              aggregate=aggregate,
+          )
+
+          passed, failed = check_thresholds(report, settings)
+
+          if not passed or failed:
+              print(
+                  f"FAIL: expected all thresholds to pass; got failures={failed}",
+                  file=sys.stderr,
+              )
+              sys.exit(1)
+
+          print(
+              f"OK  threshold wiring PASS case: all {len(aggregate)} metrics"
+              f" cleared their thresholds — check_thresholds returned (True, [])"
+          )
+          EOF
+        env:
+          RAG_LLM__API_KEY: test
+
+      - name: Eval threshold wiring — fail case
+        run: |
+          uv run python - <<'EOF'
+          # Verify Settings→EvalSettings→check_thresholds pipeline with scores that
+          # FAIL selected thresholds. No LLM calls — pure plumbing test.
+          import sys
+          sys.path.insert(0, ".")
+
+          from datetime import datetime, timezone
+
+          from src.config.settings import Settings
+          from src.domain.entities.evaluation import EvaluationReport
+          from src.application.use_cases.evaluate import check_thresholds
+
+          settings = Settings()
+
+          # faithfulness=0.50 < threshold 0.85  → should FAIL
+          # answer_relevancy=0.45 < threshold 0.80 → should FAIL
+          # context_precision/recall/correctness all above their thresholds → should pass
+          aggregate = {
+              "faithfulness": 0.50,
+              "answer_relevancy": 0.45,
+              "context_precision": 0.80,
+              "context_recall": 0.75,
+              "answer_correctness": 0.72,
+          }
+          report = EvaluationReport(
+              timestamp=datetime.now(timezone.utc),
+              dataset_path="tests/fixtures/eval_smoke.jsonl",
+              sample_size=3,
+              per_question=[],
+              aggregate=aggregate,
+          )
+
+          passed, failed = check_thresholds(report, settings)
+
+          if passed or not failed:
+              print(
+                  "FAIL: expected threshold check to report failures, but it passed",
+                  file=sys.stderr,
+              )
+              sys.exit(1)
+
+          expected = {"faithfulness", "answer_relevancy"}
+          if set(failed) != expected:
+              print(
+                  f"FAIL: expected failures={expected}, got={set(failed)}",
+                  file=sys.stderr,
+              )
+              sys.exit(1)
+
+          print(
+              f"OK  threshold wiring FAIL case: {len(failed)} expected failures"
+              f" detected correctly — check_thresholds returned (False, {sorted(failed)})"
+          )
+          EOF
+        env:
+          RAG_LLM__API_KEY: test
+
+  docker-build:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        run: docker build -t rag-app:ci .

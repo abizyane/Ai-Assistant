@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import AsyncGenerator, AsyncIterator
 from typing import Any
 
@@ -117,6 +118,35 @@ class GeminiLLM(BaseLLM):
                 messages.append(HumanMessage(content=content))
         return messages
 
+    async def _ainvoke_with_retry(self, messages: list[BaseMessage]) -> BaseMessage:
+        """Invoke the underlying LLM client with retry on transient 429 errors.
+
+        Gemini free-tier RPM quotas trigger 429 RESOURCE_EXHAUSTED. We retry up
+        to three times with exponential backoff (8s, 16s, 32s) so a brief burst
+        of requests is smoothed out instead of failing the request outright.
+        Non-rate-limit errors are re-raised immediately.
+        """
+        delays = (8.0, 16.0, 32.0)
+        last_exc: Exception | None = None
+        for attempt, delay in enumerate((0.0, *delays)):
+            if delay > 0:
+                await asyncio.sleep(delay)
+            try:
+                return await self._client.ainvoke(messages)
+            except Exception as exc:
+                msg = str(exc)
+                is_rate_limit = "429" in msg or "RESOURCE_EXHAUSTED" in msg
+                last_exc = exc
+                if not is_rate_limit or attempt == len(delays):
+                    raise
+                log.warning(
+                    "gemini.rate_limit_retry",
+                    attempt=attempt + 1,
+                    next_delay_s=delays[attempt] if attempt < len(delays) else None,
+                )
+        assert last_exc is not None
+        raise last_exc
+
     async def _do_generate(self, request: GenerationRequest) -> GenerationResult:
         """Invoke ChatGoogleGenerativeAI and return a structured GenerationResult.
 
@@ -145,7 +175,7 @@ class GeminiLLM(BaseLLM):
 
         _err: Exception | None = None
         try:
-            response: BaseMessage = await self._client.ainvoke(messages)
+            response: BaseMessage = await self._ainvoke_with_retry(messages)
         except Exception as exc:
             _err = exc
             raise

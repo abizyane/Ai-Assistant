@@ -17,12 +17,19 @@ class LLMSettings(BaseSettings):
 
     provider: str = Field(
         default="gemini",
-        description="LLM provider: gemini | openai | anthropic | ollama",
+        description="LLM provider: gemini | openai | openrouter | nvidia | anthropic | ollama",
     )
     model: str = Field(
-        default="gemini-2.0-flash-exp", description="Model name/ID"
+        default="gemini-2.0-flash", description="Model name/ID"
     )
     api_key: SecretStr = Field(description="API key for the LLM provider")
+    base_url: str | None = Field(
+        default=None,
+        description=(
+            "Optional override for OpenAI-compatible endpoints "
+            "(OpenRouter, NVIDIA NIM, local servers)"
+        ),
+    )
     temperature: float = Field(
         default=0.1, ge=0.0, le=2.0, description="Sampling temperature"
     )

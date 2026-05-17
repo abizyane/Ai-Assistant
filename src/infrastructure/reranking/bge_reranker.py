@@ -34,6 +34,7 @@ class BGEReranker:
         self._settings = settings
         self._model: Any = None
         self._lock = threading.Lock()
+        self._inference_lock = threading.Lock()
 
     def _ensure_model_loaded(self) -> None:
         """Load FlagReranker thread-safely via double-checked locking.
@@ -102,11 +103,12 @@ class BGEReranker:
         self._ensure_model_loaded()
 
         pairs = [[request.query, chunk.content] for chunk in request.chunks]
-        raw: list[float] | float = self._model.compute_score(
-            pairs,
-            batch_size=self._settings.reranker.batch_size,
-            normalize=True,
-        )
+        with self._inference_lock:
+            raw: list[float] | float = self._model.compute_score(
+                pairs,
+                batch_size=self._settings.reranker.batch_size,
+                normalize=True,
+            )
         scores: list[float] = [raw] if isinstance(raw, float) else raw
 
         scored = sorted(

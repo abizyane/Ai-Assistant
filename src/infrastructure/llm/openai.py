@@ -49,12 +49,15 @@ class OpenAILLM(BaseLLM):
         super().__init__(settings)
         self._tracer = tracer
         api_key = settings.llm.api_key.get_secret_value()
-        self._client: ChatOpenAI = ChatOpenAI(
-            model=settings.llm.model,
-            api_key=api_key,
-            temperature=settings.llm.temperature,
-            max_tokens=settings.llm.max_tokens,
-        )
+        client_kwargs: dict[str, Any] = {
+            "model": settings.llm.model,
+            "api_key": api_key,
+            "temperature": settings.llm.temperature,
+            "max_tokens": settings.llm.max_tokens,
+        }
+        if settings.llm.base_url:
+            client_kwargs["base_url"] = settings.llm.base_url
+        self._client: ChatOpenAI = ChatOpenAI(**client_kwargs)
 
     def _should_retry(self, exc: BaseException) -> bool:
         """Retry on OpenAI 5xx errors, rate-limit (429), and API timeouts.

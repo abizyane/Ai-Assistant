@@ -44,3 +44,11 @@ hf_cache/
 *.swp
 *.swo
 .sisyphus/
+
+# Personal / out-of-repo
+PROJECT_NOTES.md
+docs/PROJECT_NOTES.md
+AGENTS.md
+CHANGELOG.md
+.editorconfig
+.pre-commit-config.yaml
