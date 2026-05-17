@@ -13,23 +13,25 @@ services:
       - "8000:8000"
     networks:
       - rag-net
+    volumes:
+      - hf_cache:/tmp/hf_cache
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8000/health || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 3
-      start_period: 30s
+      start_period: 120s
 
   chainlit:
     build:
       context: .
       dockerfile: Dockerfile
-    restart: unless-stopped
+    restart: on-failure:3
     depends_on:
       db:
         condition: service_healthy
       app:
-        condition: service_started
+        condition: service_healthy
     env_file:
       - .env
     environment:
@@ -184,6 +186,7 @@ volumes:
   prometheus_data:
   grafana_data:
   loki_data:
+  hf_cache:
 
 networks:
   rag-net:

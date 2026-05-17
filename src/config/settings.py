@@ -74,6 +74,12 @@ class RerankerSettings(BaseSettings):
 
     model: str = Field(default="BAAI/bge-reranker-v2-m3", description="Reranker model ID")
     batch_size: int = Field(default=16, gt=0, description="Batch size for reranking")
+    min_score: float = Field(
+        default=0.3,
+        ge=0.0,
+        le=1.0,
+        description="Minimum relevance score; chunks below this are discarded",
+    )
 
 
 class LangfuseSettings(BaseSettings):
@@ -164,7 +170,7 @@ class Settings(BaseSettings):
     eval: EvalSettings = Field(default_factory=EvalSettings)
     api_url: str = Field(
         default="http://localhost:8000",
-        description="RAG API base URL used by the Streamlit web UI",
+        description="RAG API base URL used by the Chainlit web UI",
     )
     langfuse_base_url: str = Field(
         default="http://localhost:3000",

@@ -48,9 +48,11 @@ ENV HOME=/tmp
 ENV HF_HOME=/tmp/hf_cache
 ENV XDG_CACHE_HOME=/tmp/hf_cache
 
+# Grant the non-root user write access to the app directory
+RUN chown -R rag:rag /app
 # Run as non-root
 USER rag
 
 # Default: FastAPI API server
-# Override CMD for the web service: ["streamlit", "run", "src/interface/web/app.py", ...]
+# Override CMD for the chainlit web service: ["chainlit", "run", "src/interface/web/chainlit_app.py", ...]
 CMD ["uvicorn", "src.interface.api.main:app", "--host", "0.0.0.0", "--port", "8000"]

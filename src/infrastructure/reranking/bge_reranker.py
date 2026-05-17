@@ -117,6 +117,9 @@ class BGEReranker:
             reverse=True,
         )
 
-        return [
-            chunk.model_copy(update={"score": score}) for score, chunk in scored[: request.top_k]
-        ]
+        threshold = self._settings.reranker.min_score
+        above = [(s, c) for s, c in scored if s >= threshold]
+        # If nothing clears the relevance bar, return an empty list so the
+        # generate node can emit a graceful "not found" reply without an LLM call.
+        top = above[: request.top_k]
+        return [chunk.model_copy(update={"score": score}) for score, chunk in top]

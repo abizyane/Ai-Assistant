@@ -70,6 +70,26 @@ def _make_generate_node(generate_uc: GenerateAnswerUseCase) -> object:
     @traced("agent.node.generate")
     async def generate_node(state: AgentState) -> dict[str, object]:
         chunks: list[RetrievedChunk] = state.get("retrieved_chunks", [])
+
+        if not chunks:
+            language = state.get("language", "en")
+            no_ctx = AnswerWithCitations(
+                text=(
+                    "I couldn't find relevant information in the knowledge base"
+                    " to answer your question."
+                ),
+                citations=[],
+                language=language,
+                tokens_in=0,
+                tokens_out=0,
+            )
+            return {
+                "draft_answer": no_ctx.text,
+                "citations": [],
+                "final_answer": no_ctx,
+                "grounded": True,
+            }
+
         answer = await generate_uc.execute(
             query=state["query"],
             retrieved_chunks=chunks,
