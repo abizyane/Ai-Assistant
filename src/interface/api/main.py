@@ -11,6 +11,7 @@ Exposes:
 
 from __future__ import annotations
 
+import asyncio
 import importlib.metadata
 import json
 import os
@@ -62,8 +63,13 @@ _IS_PRODUCTION = os.getenv("RAG_APP_ENV", "development").lower() == "production"
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Warm stateful singletons on startup; dispose engine on shutdown."""
     log.info("api.startup: warming embedder and reranker")
-    di.build_embedder()
-    di.build_reranker()
+    embedder = di.build_embedder()
+    reranker = di.build_reranker()
+    try:
+        await embedder.embed_query("warmup")
+        await asyncio.to_thread(reranker._ensure_model_loaded)
+    except Exception as _warmup_err:
+        log.warning("api.startup.warmup_failed", error=str(_warmup_err))
     log.info("api.startup: ready")
     yield
     log.info("api.shutdown: disposing database engine")
@@ -79,7 +85,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8501"],
+    allow_origins=["http://localhost:8501", "http://localhost:8502"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -109,11 +115,28 @@ async def chat_sse(body: ChatRequest, agent: AgentDep) -> StreamingResponse:
         state["language"] = body.language
 
     async def _event_generator() -> AsyncGenerator[str, None]:
-        result: dict[str, Any] = await agent.ainvoke(state)
-        answer = result.get("final_answer")
-        if answer is not None:
-            for word in answer.text.split():
-                yield f"data: {json.dumps({'token': word + ' '})}\n\n"
+        final_answer: Any = None
+        try:
+            async with asyncio.timeout(60.0):
+                async for event in agent.astream_events(state, version="v2"):
+                    etype = event["event"]
+                    if (
+                        etype == "on_chat_model_stream"
+                        and event.get("metadata", {}).get("langgraph_node") == "generate"
+                    ):
+                        chunk = event["data"]["chunk"]
+                        token = chunk.content if isinstance(chunk.content, str) else ""
+                        if token:
+                            yield f"data: {json.dumps({'token': token})}\n\n"
+                    elif etype == "on_chain_end":
+                        output = event.get("data", {}).get("output") or {}
+                        if isinstance(output, dict) and "final_answer" in output:
+                            final_answer = output["final_answer"]
+        except TimeoutError:
+            yield f"data: {json.dumps({'error': 'timeout', 'done': True})}\n\n"
+            return
+        citations: list[dict[str, Any]] = []
+        if final_answer is not None:
             citations = [
                 CitationOut(
                     chunk_id=c.chunk_id,
@@ -121,11 +144,9 @@ async def chat_sse(body: ChatRequest, agent: AgentDep) -> StreamingResponse:
                     page=c.page,
                     marker=c.marker,
                 ).model_dump()
-                for c in answer.citations
+                for c in final_answer.citations
             ]
-            yield f"data: {json.dumps({'done': True, 'citations': citations})}\n\n"
-        else:
-            yield f"data: {json.dumps({'done': True, 'citations': []})}\n\n"
+        yield f"data: {json.dumps({'done': True, 'citations': citations})}\n\n"
 
     return StreamingResponse(_event_generator(), media_type="text/event-stream")
 
@@ -140,7 +161,10 @@ async def chat_sync(body: ChatRequest, agent: AgentDep) -> SyncChatResponse:
     if body.language:
         state["language"] = body.language
 
-    result: dict[str, Any] = await agent.ainvoke(state)
+    try:
+        result: dict[str, Any] = await asyncio.wait_for(agent.ainvoke(state), timeout=60.0)
+    except TimeoutError:
+        raise HTTPException(status_code=504, detail="Agent timed out") from None
     answer = result.get("final_answer")
 
     if answer is None:

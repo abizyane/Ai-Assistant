@@ -13,6 +13,7 @@ with ``AsyncMock`` collaborators (no network in tests).
 
 from __future__ import annotations
 
+import asyncio
 from typing import TYPE_CHECKING, TypedDict
 
 from langgraph.graph import END, StateGraph
@@ -104,22 +105,24 @@ def _make_grade_node(grade_llm: LLMPort) -> object:
             return {"relevance_grades": []}
 
         query = state.get("rewritten_query") or state["query"]
-        grades: list[bool] = []
-        for chunk in chunks:
+
+        async def _grade_one(chunk: RetrievedChunk) -> bool:
             prompt = (
                 "You are a binary relevance grader. Decide whether the passage "
                 "is relevant to the question. Answer with a single token: "
                 "'yes' or 'no'.\n\n"
                 f"Question: {query}\n\nPassage: {chunk.content}"
             )
-            request = GenerationRequest(
+            req = GenerationRequest(
                 messages=[{"role": "user", "content": prompt}],
                 system_prompt="",
                 temperature=0.0,
                 max_tokens=4,
             )
-            result = await grade_llm.generate(request)
-            grades.append(result.text.strip().lower().startswith("y"))
+            result = await grade_llm.generate(req)
+            return result.text.strip().lower().startswith("y")
+
+        grades: list[bool] = list(await asyncio.gather(*(_grade_one(c) for c in chunks)))
         return {"relevance_grades": grades}
 
     return grade_relevance_node

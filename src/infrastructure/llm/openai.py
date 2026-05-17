@@ -48,20 +48,25 @@ class OpenAILLM(BaseLLM):
             "api_key": api_key,
             "temperature": settings.llm.temperature,
             "max_tokens": settings.llm.max_tokens,
+            "timeout": 30,
+            "streaming": True,
         }
         if settings.llm.base_url:
             client_kwargs["base_url"] = settings.llm.base_url
         self._client: ChatOpenAI = ChatOpenAI(**client_kwargs)
 
     def _should_retry(self, exc: BaseException) -> bool:
-        """Retry on OpenAI 5xx errors, rate-limit (429), and API timeouts."""
+        """Retry on OpenAI 5xx errors, rate-limit (429), API timeouts, and transport errors."""
+        import httpx
         import openai
 
         if isinstance(exc, openai.InternalServerError):
             return True
         if isinstance(exc, openai.RateLimitError):
             return True
-        return isinstance(exc, openai.APITimeoutError)
+        if isinstance(exc, openai.APITimeoutError):
+            return True
+        return isinstance(exc, (httpx.ConnectError, httpx.ReadTimeout, httpx.RemoteProtocolError))
 
     def _wrap_exception(self, exc: Exception) -> LLMError:
         import openai
@@ -109,7 +114,11 @@ class OpenAILLM(BaseLLM):
 
         _err: Exception | None = None
         try:
-            response: BaseMessage = await self._client.ainvoke(messages)
+            client = self._client.bind(
+                max_tokens=request.max_tokens,
+                temperature=request.temperature,
+            )
+            response: BaseMessage = await client.ainvoke(messages)
         except Exception as exc:
             _err = exc
             raise
@@ -149,9 +158,13 @@ class OpenAILLM(BaseLLM):
 
     def _do_stream(self, request: GenerationRequest) -> AsyncIterator[str]:
         messages = self._build_messages(request)
+        client = self._client.bind(
+            max_tokens=request.max_tokens,
+            temperature=request.temperature,
+        )
 
         async def _gen() -> AsyncGenerator[str, None]:
-            async for chunk in self._client.astream(messages):
+            async for chunk in client.astream(messages):
                 content = chunk.content
                 if isinstance(content, str) and content:
                     yield content
