@@ -1,0 +1,417 @@
+/* ─────────────────────────────────────────────────────────
+   1337 AI Assistant — Chainlit stylesheet
+   Brand: dark/moody, neon-green accent (#a3de83), editorial
+   Font: Inter (Google Fonts)
+   ───────────────────────────────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --brand-green: #a3de83;
+  --brand-green-dim: #7ec85a;
+  --brand-bg: #111111;
+  --brand-surface: #1a1a1a;
+  --brand-card: #222222;
+  --brand-border: #333333;
+  --brand-text: #f9f9f9;
+  --brand-muted: #888888;
+  --brand-radius: 0.5rem;
+  --brand-radius-sm: 0.25rem;
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.2s ease;
+  --cl-color-primary: #a3de83;
+}
+
+/* ── Global resets ─────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--brand-bg);
+  color: var(--brand-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.01em;
+}
+
+/* ── Focus rings: green ────────────────────────────────── */
+*:focus-visible {
+  outline: 2px solid var(--brand-green) !important;
+  outline-offset: 2px;
+}
+
+/* ── Header / Nav bar ──────────────────────────────────── */
+header,
+[class*="header"],
+nav,
+[class*="navbar"],
+[class*="Header"] {
+  background: rgba(17, 17, 17, 0.92) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border-bottom: 1px solid var(--brand-border) !important;
+}
+
+/* ── 1337 wordmark injected into header via pseudo-element */
+header::before,
+[class*="Header"]::before {
+  content: "1337";
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: 0.1em;
+  color: var(--brand-green);
+  padding-left: 1.25rem;
+  display: flex;
+  align-items: center;
+}
+
+/* ── App name / title in header ─────────────────────────── */
+[class*="appName"],
+[class*="app-name"],
+h1[class*="title"] {
+  font-family: 'Inter', sans-serif !important;
+  color: var(--brand-text) !important;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* ── Sidebar ────────────────────────────────────────────── */
+[class*="sidebar"],
+[class*="Sidebar"],
+aside {
+  background-color: var(--brand-bg) !important;
+  border-right: 1px solid var(--brand-border) !important;
+}
+
+[class*="sidebar"] h2,
+[class*="sidebar"] h3,
+[class*="sidebar"] [class*="title"] {
+  font-family: 'Inter', sans-serif !important;
+  color: var(--brand-muted) !important;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Conversation list items */
+[class*="conversation"],
+[class*="thread"],
+[class*="ThreadListItem"],
+[class*="ConversationItem"] {
+  border-radius: var(--brand-radius-sm) !important;
+  padding: 0.5rem 0.75rem !important;
+  transition: background var(--transition-fast), color var(--transition-fast);
+  color: var(--brand-text) !important;
+}
+
+[class*="conversation"]:hover,
+[class*="thread"]:hover,
+[class*="ThreadListItem"]:hover,
+[class*="ConversationItem"]:hover {
+  background-color: rgba(163, 222, 131, 0.08) !important;
+  color: var(--brand-green) !important;
+}
+
+[class*="conversation"][class*="active"],
+[class*="thread"][class*="active"],
+[class*="ThreadListItem"][class*="active"],
+[class*="ConversationItem"][class*="active"] {
+  background-color: rgba(163, 222, 131, 0.1) !important;
+  border-left: 2px solid var(--brand-green) !important;
+  color: var(--brand-green) !important;
+}
+
+/* New chat button in sidebar */
+[class*="newChat"],
+[class*="new-chat"],
+button[class*="new"] {
+  background-color: var(--brand-card) !important;
+  border: 1px solid var(--brand-border) !important;
+  color: var(--brand-text) !important;
+  border-radius: var(--brand-radius-sm) !important;
+  transition: border-color var(--transition-fast), color var(--transition-fast);
+}
+
+[class*="newChat"]:hover,
+[class*="new-chat"]:hover,
+button[class*="new"]:hover {
+  border-color: var(--brand-green) !important;
+  color: var(--brand-green) !important;
+}
+
+/* ── Chat area ──────────────────────────────────────────── */
+[class*="chat"],
+[class*="Chat"],
+main {
+  background-color: var(--brand-bg) !important;
+}
+
+/* ── Message bubbles ────────────────────────────────────── */
+[class*="message"],
+[class*="Message"] {
+  background-color: var(--brand-surface) !important;
+  border-radius: var(--brand-radius) !important;
+  border: 1px solid var(--brand-border) !important;
+}
+
+/* User messages: green left border accent */
+[class*="userMessage"],
+[class*="user-message"],
+[class*="Message"][class*="user"],
+[data-role="user"] [class*="message"] {
+  border-left: 3px solid var(--brand-green) !important;
+  background-color: rgba(163, 222, 131, 0.06) !important;
+}
+
+/* Assistant messages: subtle darker surface */
+[class*="assistantMessage"],
+[class*="assistant-message"],
+[class*="Message"][class*="assistant"],
+[data-role="assistant"] [class*="message"] {
+  border-left: 3px solid var(--brand-border) !important;
+  background-color: var(--brand-surface) !important;
+}
+
+/* Message text */
+[class*="message"] p,
+[class*="Message"] p,
+[class*="message"] li,
+[class*="Message"] li {
+  font-family: 'Inter', sans-serif !important;
+  color: var(--brand-text) !important;
+  line-height: 1.7;
+  font-size: 0.9375rem;
+}
+
+/* Inline code */
+[class*="message"] code,
+[class*="Message"] code {
+  background-color: var(--brand-card) !important;
+  color: var(--brand-green) !important;
+  padding: 0.1em 0.35em;
+  border-radius: var(--brand-radius-sm);
+  font-size: 0.875em;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+}
+
+/* Code blocks */
+[class*="message"] pre,
+[class*="Message"] pre {
+  background-color: var(--brand-card) !important;
+  border: 1px solid var(--brand-border) !important;
+  border-radius: var(--brand-radius) !important;
+  padding: 1rem;
+  overflow-x: auto;
+}
+
+[class*="message"] pre code,
+[class*="Message"] pre code {
+  background-color: transparent !important;
+  color: var(--brand-text) !important;
+  padding: 0;
+}
+
+/* ── Input / composer area ──────────────────────────────── */
+[class*="inputBox"],
+[class*="input-box"],
+[class*="composer"],
+[class*="Composer"],
+[class*="messageInput"],
+[class*="message-input"] {
+  background-color: var(--brand-surface) !important;
+  border: 1px solid var(--brand-border) !important;
+  border-radius: var(--brand-radius) !important;
+  transition: border-color var(--transition-base);
+}
+
+[class*="inputBox"]:focus-within,
+[class*="input-box"]:focus-within,
+[class*="composer"]:focus-within,
+[class*="Composer"]:focus-within,
+[class*="messageInput"]:focus-within,
+[class*="message-input"]:focus-within {
+  border-color: var(--brand-green) !important;
+  box-shadow: 0 0 0 3px rgba(163, 222, 131, 0.12) !important;
+}
+
+textarea,
+input[type="text"] {
+  font-family: 'Inter', sans-serif !important;
+  background-color: transparent !important;
+  color: var(--brand-text) !important;
+  caret-color: var(--brand-green);
+}
+
+textarea::placeholder,
+input[type="text"]::placeholder {
+  color: var(--brand-muted) !important;
+}
+
+/* ── Send button ────────────────────────────────────────── */
+button[class*="send"],
+button[class*="Send"],
+[class*="sendButton"],
+[class*="send-button"] {
+  background-color: var(--brand-card) !important;
+  color: var(--brand-muted) !important;
+  border-radius: var(--brand-radius-sm) !important;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+button[class*="send"]:hover,
+button[class*="Send"]:hover,
+[class*="sendButton"]:hover,
+[class*="send-button"]:hover {
+  background-color: var(--brand-green) !important;
+  color: var(--brand-bg) !important;
+}
+
+/* ── Buttons (generic) ──────────────────────────────────── */
+button {
+  font-family: 'Inter', sans-serif;
+  transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+
+button[class*="primary"],
+[class*="primaryButton"] {
+  background-color: var(--brand-green) !important;
+  color: var(--brand-bg) !important;
+  border-radius: var(--brand-radius-sm) !important;
+  font-weight: 600;
+}
+
+button[class*="primary"]:hover,
+[class*="primaryButton"]:hover {
+  background-color: var(--brand-green-dim) !important;
+}
+
+/* ── Chat settings panel (in sidebar) ──────────────────── */
+[class*="settings"],
+[class*="Settings"] {
+  background-color: var(--brand-surface) !important;
+  border: 1px solid var(--brand-border) !important;
+  border-radius: var(--brand-radius) !important;
+}
+
+select,
+[class*="select"],
+[class*="Select"] {
+  font-family: 'Inter', sans-serif !important;
+  background-color: var(--brand-card) !important;
+  color: var(--brand-text) !important;
+  border: 1px solid var(--brand-border) !important;
+  border-radius: var(--brand-radius-sm) !important;
+}
+
+select:focus,
+[class*="select"]:focus {
+  border-color: var(--brand-green) !important;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(163, 222, 131, 0.12) !important;
+}
+
+/* ── Loading / streaming cursor ────────────────────────── */
+:root {
+  --loading-cursor-color: var(--brand-green);
+  --stop-icon-color: hsl(99 58% 69%);
+  --stop-icon-animation: none;
+}
+
+[class*="cursor"],
+[class*="Cursor"] {
+  background-color: var(--brand-green) !important;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+[class*="blinking"],
+[class*="streaming"] {
+  animation: blink 1s step-start infinite;
+  color: var(--brand-green) !important;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--brand-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--brand-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--brand-muted);
+}
+
+/* ── Dividers / separators ──────────────────────────────── */
+hr,
+[class*="divider"],
+[class*="separator"] {
+  border-color: var(--brand-border) !important;
+}
+
+/* ── Links ──────────────────────────────────────────────── */
+a {
+  color: var(--brand-green) !important;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--brand-green-dim) !important;
+  text-decoration: underline;
+}
+
+/* ── Watermark / branding footer ───────────────────────── */
+[class*="watermark"],
+[class*="Watermark"],
+[class*="poweredBy"],
+[class*="powered-by"] {
+  opacity: 0.35 !important;
+  font-size: 0.7rem !important;
+  color: var(--brand-muted) !important;
+}
+
+/* ── Toast / alert notifications ───────────────────────── */
+[class*="toast"],
+[class*="Toast"],
+[class*="notification"],
+[class*="Notification"] {
+  background-color: var(--brand-card) !important;
+  border: 1px solid var(--brand-border) !important;
+  border-radius: var(--brand-radius) !important;
+  color: var(--brand-text) !important;
+}
+
+/* ── Confirm dialog (confirm_new_chat) ──────────────────── */
+[class*="dialog"],
+[class*="Dialog"],
+[class*="modal"],
+[class*="Modal"] {
+  background-color: var(--brand-surface) !important;
+  border: 1px solid var(--brand-border) !important;
+  border-radius: var(--brand-radius) !important;
+}
+
+[class*="dialog"] h2,
+[class*="Dialog"] h2,
+[class*="modal"] h2,
+[class*="Modal"] h2 {
+  font-family: 'Inter', sans-serif !important;
+  color: var(--brand-text) !important;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}

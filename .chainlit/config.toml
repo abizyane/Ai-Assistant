@@ -1,0 +1,35 @@
+[project]
+enable_telemetry = false
+user_env = []
+session_timeout = 3600
+cache = false
+
+[features]
+multi_modal = false
+unsafe_allow_html = false
+latex = false
+
+[features.conversation_history]
+enabled = true
+
+[features.spontaneous_file_upload]
+enabled = false
+
+[features.audio]
+enabled = false
+
+[UI]
+name = "1337 AI Assistant"
+description = "Ask anything about 1337 coding school"
+default_theme = "dark"
+layout = "default"
+collapsed_sidebar = false
+hide_cot = false
+custom_css = "/public/stylesheet.css"
+default_sidebar_state = "open"
+chat_settings_location = "sidebar"
+confirm_new_chat = true
+show_readme_as_default = false
+
+[UI.theme]
+default = "dark"
