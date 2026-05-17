@@ -29,7 +29,8 @@ C_RESET  := \033[0m
         lint format type typecheck \
         test test-unit test-integration test-e2e smoke eval \
         db-migrate db-rollback db-revision db-shell \
-        traces metrics dashboards \
+        traces metrics dashboards chainlit \
+        ingest \
         install
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -45,7 +46,7 @@ help:  ## Show this help message
 	@echo "Usage:  make <target>"
 	@echo ""
 	@printf "$(C_GREEN)Stack lifecycle:$(C_RESET)\n"
-	@grep -E '^(up|down|logs|ps|build|rebuild|clean|fclean|state|demo)[[:space:]]*:.*## ' $(MAKEFILE_LIST) \
+	@grep -E '^(up|down|logs|ps|build|rebuild|clean|fclean|state|demo|ingest|chainlit)[[:space:]]*:.*## ' $(MAKEFILE_LIST) \
 	    | awk 'BEGIN {FS = ":.*## "}; {printf "  make %-22s %s\n", $$1, $$2}'
 	@echo ""
 	@printf "$(C_GREEN)Quality gates:$(C_RESET)\n"
@@ -138,6 +139,17 @@ demo:  ## One-shot hiring-manager demo: spin up + seed + print URLs
 	@printf "$(C_CYAN)║  Grafana       →  http://localhost:3001                 ║$(C_RESET)\n"
 	@printf "$(C_CYAN)║  Prometheus    →  http://localhost:9090                 ║$(C_RESET)\n"
 	@printf "$(C_CYAN)╚══════════════════════════════════════════════════════════╝$(C_RESET)\n"
+
+ingest:  ## Ingest documents from data/knowledge_base/ into the vector store
+	@printf "$(C_YELLOW)Ingesting documents…$(C_RESET)\n"
+	$(COMPOSE) exec app $(UV) run rag-cli ingest data/knowledge_base/
+	@printf "$(C_GREEN)Ingest complete.$(C_RESET)\n"
+
+chainlit:  ## Open Chainlit UI in your default browser
+	@printf "$(C_CYAN)Opening Chainlit at http://localhost:8502…$(C_RESET)\n"
+	@command -v xdg-open >/dev/null 2>&1 && xdg-open http://localhost:8502 || \
+	 command -v open      >/dev/null 2>&1 && open      http://localhost:8502 || \
+	 echo "Navigate to http://localhost:8502"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Quality gates

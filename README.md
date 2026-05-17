@@ -55,12 +55,15 @@ After `make demo`:
 | Langfuse      | http://localhost:3000            |
 | Grafana       | http://localhost:3001            |
 | Prometheus    | http://localhost:9090            |
+| Loki          | http://localhost:3100            |
 
 ## Available commands
 
 | Target            | Description                                              |
 |-------------------|----------------------------------------------------------|
 | `make demo`       | Spin up full stack, seed demo data, print URLs           |
+| `make chainlit`   | Open Chainlit UI in your default browser                 |
+| `make ingest`     | Ingest documents from data/knowledge_base/ into the vector store |
 | `make up`         | Start the stack (detached, healthchecks)                 |
 | `make down`       | Stop containers (volumes preserved)                      |
 | `make fclean`     | Destroy everything: containers, volumes, images, caches, runtime data |
@@ -89,7 +92,6 @@ Run `make help` for the full list.
 │   ├── interface/        # FastAPI, Typer CLI, Chainlit
 │   └── shared/           # Cross-cutting types, exceptions, utils
 ├── tests/                # unit, integration, e2e
-├── docker-compose.yml
 ├── docker-compose.yml
 ├── Dockerfile
 ├── Makefile
