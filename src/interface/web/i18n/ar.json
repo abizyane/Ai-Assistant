@@ -37,5 +37,7 @@
   "error_generic": "حدث خطأ غير متوقع: {error}",
   "lang_en": "English",
   "lang_fr": "Français",
-  "lang_ar": "العربية"
+  "lang_ar": "العربية",
+  "error_network": "خطأ في الشبكة: {error}",
+  "citations_header": "‏**المصادر**"
 }

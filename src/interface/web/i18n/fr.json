@@ -37,5 +37,7 @@
   "error_generic": "Une erreur inattendue s'est produite : {error}",
   "lang_en": "English",
   "lang_fr": "Français",
-  "lang_ar": "العربية"
+  "lang_ar": "العربية",
+  "error_network": "Erreur réseau : {error}",
+  "citations_header": "**Sources**"
 }

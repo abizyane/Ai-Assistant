@@ -37,5 +37,7 @@
   "error_generic": "An unexpected error occurred: {error}",
   "lang_en": "English",
   "lang_fr": "Français",
-  "lang_ar": "العربية"
+  "lang_ar": "العربية",
+  "error_network": "Network error: {error}",
+  "citations_header": "**Sources**"
 }

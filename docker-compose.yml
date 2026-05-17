@@ -20,7 +20,7 @@ services:
       retries: 3
       start_period: 30s
 
-  web:
+  chainlit:
     build:
       context: .
       dockerfile: Dockerfile
@@ -35,16 +35,19 @@ services:
     environment:
       RAG_API_URL: http://app:8000
       RAG_LANGFUSE_URL: http://langfuse:3000
+      CHAINLIT_DISABLE_TELEMETRY: "true"
     ports:
-      - "8501:8501"
+      - "8502:8502"
     networks:
       - rag-net
     command:
-      - streamlit
+      - chainlit
       - run
-      - src/interface/web/app.py
-      - --server.address=0.0.0.0
-      - --server.port=8501
+      - src/interface/web/chainlit_app.py
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8502"
 
   db:
     image: pgvector/pgvector:pg16

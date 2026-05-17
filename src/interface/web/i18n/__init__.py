@@ -1,4 +1,4 @@
-"""Internationalisation helpers for the Streamlit web UI."""
+"""Internationalisation helpers for the web UI."""
 
 from __future__ import annotations
 
