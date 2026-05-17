@@ -366,9 +366,8 @@ def build_evaluate_use_case(settings: Settings | None = None) -> EvaluateUseCase
 def build_agent(settings: Settings | None = None) -> CompiledStateGraph:
     """Build and compile the full agentic RAG LangGraph.
 
-    Wires retrieve → grade_relevance → (rewrite_query) → generate →
-    verify_grounding into a compiled ``StateGraph``.  The returned graph is
-    ready for ``ainvoke``/``astream``.
+    Wires retrieve \u2192 generate \u2192 verify_grounding into a compiled
+    ``StateGraph``.  The returned graph is ready for ``ainvoke``/``astream``.
 
     Args:
         settings: Application settings. Defaults to ``build_settings()``.

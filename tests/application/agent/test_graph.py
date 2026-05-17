@@ -66,7 +66,7 @@ def generate_uc() -> MagicMock:
 async def test_happy_path(
     retrieve_uc: MagicMock, generate_uc: MagicMock, settings: Settings
 ) -> None:
-    grade_llm = _llm_with(["yes", "yes"])
+    grade_llm = _llm_with(["yes"])
     graph = build_agent_graph(retrieve_uc, generate_uc, grade_llm, settings)
 
     final: AgentState = await graph.ainvoke(
@@ -75,44 +75,16 @@ async def test_happy_path(
 
     assert retrieve_uc.execute.await_count == 1
     assert generate_uc.execute.await_count == 1
-    assert final["rewrite_count"] == 0 if "rewrite_count" in final else True
     assert final.get("retry_count", 0) == 0
     assert final["grounded"] is True
     assert final["final_answer"].text == "Paris."
 
 
-async def test_rewrite_when_irrelevant(
-    retrieve_uc: MagicMock, generate_uc: MagicMock, settings: Settings
-) -> None:
-    grade_llm = _llm_with(
-        [
-            "no",
-            "rewritten question",
-            "yes",
-            "yes",
-        ]
-    )
-    graph = build_agent_graph(retrieve_uc, generate_uc, grade_llm, settings)
-
-    final: AgentState = await graph.ainvoke({"query": "Tell me about Paris", "language": "en"})
-
-    assert retrieve_uc.execute.await_count == 2
-    assert generate_uc.execute.await_count == 1
-    assert final["rewrite_count"] == 1
-    assert final["rewritten_query"] == "rewritten question"
-    assert final["grounded"] is True
-
-
 async def test_retry_on_ungrounded(
     retrieve_uc: MagicMock, generate_uc: MagicMock, settings: Settings
 ) -> None:
-    grade_llm = _llm_with(
-        [
-            "yes",
-            "no",
-            "yes",
-        ]
-    )
+    # verify says "no" first (not grounded), then "yes" after retry
+    grade_llm = _llm_with(["no", "yes"])
     graph = build_agent_graph(retrieve_uc, generate_uc, grade_llm, settings)
 
     final: AgentState = await graph.ainvoke({"query": "Capital of France?", "language": "en"})
@@ -123,16 +95,16 @@ async def test_retry_on_ungrounded(
     assert final["grounded"] is True
 
 
-async def test_loop_bounds_respected(
+async def test_stops_after_max_retries(
     retrieve_uc: MagicMock, generate_uc: MagicMock, settings: Settings
 ) -> None:
+    # verify always returns "no" — graph should stop and return the last answer
     grade_llm = MagicMock()
 
-    async def _always(_request: object) -> GenerationResult:
+    async def _always_no(_request: object) -> GenerationResult:
         return GenerationResult(text="no", input_tokens=1, output_tokens=1, model="mock")
 
-    grade_llm.generate = AsyncMock(side_effect=_always)
-
+    grade_llm.generate = AsyncMock(side_effect=_always_no)
     graph = build_agent_graph(retrieve_uc, generate_uc, grade_llm, settings)
 
     final: AgentState = await graph.ainvoke(
@@ -140,7 +112,6 @@ async def test_loop_bounds_respected(
         config={"recursion_limit": 50},
     )
 
-    assert retrieve_uc.execute.await_count <= 2
-    assert generate_uc.execute.await_count <= 2
-    assert final.get("rewrite_count", 0) <= 1
+    assert generate_uc.execute.await_count <= settings.agent.max_regen_attempts + 1
     assert final.get("retry_count", 0) <= settings.agent.max_regen_attempts + 1
+    assert final["final_answer"] is not None
