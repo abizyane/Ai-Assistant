@@ -11,17 +11,13 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class LLMSettings(BaseSettings):
     """LLM provider configuration."""
 
-    model_config = SettingsConfigDict(
-        env_prefix="RAG_LLM__", env_file=".env", extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_prefix="RAG_LLM__", env_file=".env", extra="ignore")
 
     provider: str = Field(
         default="gemini",
         description="LLM provider: gemini | openai | openrouter | nvidia | anthropic | ollama",
     )
-    model: str = Field(
-        default="gemini-2.0-flash", description="Model name/ID"
-    )
+    model: str = Field(default="gemini-2.0-flash", description="Model name/ID")
     api_key: SecretStr = Field(description="API key for the LLM provider")
     base_url: str | None = Field(
         default=None,
@@ -30,9 +26,7 @@ class LLMSettings(BaseSettings):
             "(OpenRouter, NVIDIA NIM, local servers)"
         ),
     )
-    temperature: float = Field(
-        default=0.1, ge=0.0, le=2.0, description="Sampling temperature"
-    )
+    temperature: float = Field(default=0.1, ge=0.0, le=2.0, description="Sampling temperature")
     max_tokens: int = Field(default=4096, gt=0, description="Maximum output tokens")
     max_retries: int = Field(
         default=3, ge=0, description="Max retry attempts on transient LLM errors"
@@ -42,17 +36,11 @@ class LLMSettings(BaseSettings):
 class EmbeddingSettings(BaseSettings):
     """Embedding model configuration."""
 
-    model_config = SettingsConfigDict(
-        env_prefix="RAG_EMBEDDING__", env_file=".env", extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_prefix="RAG_EMBEDDING__", env_file=".env", extra="ignore")
 
-    model: str = Field(
-        default="BAAI/bge-m3", description="HuggingFace embedding model ID"
-    )
+    model: str = Field(default="BAAI/bge-m3", description="HuggingFace embedding model ID")
     batch_size: int = Field(default=32, gt=0, description="Batch size for encoding")
-    cache_dir: str = Field(
-        default="/tmp/hf_cache", description="HuggingFace model cache directory"
-    )
+    cache_dir: str = Field(default="/tmp/hf_cache", description="HuggingFace model cache directory")
 
 
 class VectorStoreSettings(BaseSettings):
@@ -72,39 +60,27 @@ class VectorStoreSettings(BaseSettings):
         default=64, gt=0, description="HNSW ef_construction parameter"
     )
     top_k_dense: int = Field(default=20, gt=0, description="Dense retrieval top-k")
-    top_k_sparse: int = Field(
-        default=20, gt=0, description="Sparse (BM25) retrieval top-k"
-    )
-    top_k_rerank: int = Field(
-        default=5, gt=0, description="After-rerank top-k returned"
-    )
+    top_k_sparse: int = Field(default=20, gt=0, description="Sparse (BM25) retrieval top-k")
+    top_k_rerank: int = Field(default=5, gt=0, description="After-rerank top-k returned")
 
 
 class RerankerSettings(BaseSettings):
     """Cross-encoder reranker configuration."""
 
-    model_config = SettingsConfigDict(
-        env_prefix="RAG_RERANKER__", env_file=".env", extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_prefix="RAG_RERANKER__", env_file=".env", extra="ignore")
 
-    model: str = Field(
-        default="BAAI/bge-reranker-v2-m3", description="Reranker model ID"
-    )
+    model: str = Field(default="BAAI/bge-reranker-v2-m3", description="Reranker model ID")
     batch_size: int = Field(default=16, gt=0, description="Batch size for reranking")
 
 
 class LangfuseSettings(BaseSettings):
     """Langfuse observability tracing configuration."""
 
-    model_config = SettingsConfigDict(
-        env_prefix="RAG_LANGFUSE__", env_file=".env", extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_prefix="RAG_LANGFUSE__", env_file=".env", extra="ignore")
 
     host: str = Field(default="http://localhost:3000", description="Langfuse server URL")
     public_key: str = Field(default="", description="Langfuse public key")
-    secret_key: SecretStr = Field(
-        default=SecretStr(""), description="Langfuse secret key"
-    )
+    secret_key: SecretStr = Field(default=SecretStr(""), description="Langfuse secret key")
     enabled: bool = Field(default=False, description="Enable Langfuse tracing")
 
 
@@ -122,9 +98,7 @@ class PrometheusSettings(BaseSettings):
 class EvalSettings(BaseSettings):
     """Ragas evaluation quality thresholds."""
 
-    model_config = SettingsConfigDict(
-        env_prefix="RAG_EVAL__", env_file=".env", extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_prefix="RAG_EVAL__", env_file=".env", extra="ignore")
 
     faithfulness: float = Field(
         default=0.85, ge=0.0, le=1.0, description="Minimum faithfulness score"
@@ -146,9 +120,7 @@ class EvalSettings(BaseSettings):
 class AgentSettings(BaseSettings):
     """LangGraph agent loop configuration."""
 
-    model_config = SettingsConfigDict(
-        env_prefix="RAG_AGENT__", env_file=".env", extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_prefix="RAG_AGENT__", env_file=".env", extra="ignore")
 
     max_rewrite_attempts: int = Field(
         default=1, ge=0, le=3, description="Max query rewrite iterations"
@@ -162,9 +134,7 @@ class AgentSettings(BaseSettings):
 class ChunkingSettings(BaseSettings):
     """Document chunking configuration."""
 
-    model_config = SettingsConfigDict(
-        env_prefix="RAG_CHUNKING__", env_file=".env", extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_prefix="RAG_CHUNKING__", env_file=".env", extra="ignore")
 
     chunk_size: int = Field(default=800, gt=0, description="Target chunk size in characters")
     chunk_overlap: int = Field(default=100, ge=0, description="Overlap between consecutive chunks")

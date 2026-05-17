@@ -1,4 +1,5 @@
 """Jinja2 prompt template loader for the application layer."""
+
 from __future__ import annotations
 
 from pathlib import Path

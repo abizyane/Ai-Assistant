@@ -304,6 +304,7 @@ async def test_directory_ingests_all_pdfs(
 def test_detect_language_returns_unknown_on_failure() -> None:
     with patch("src.application.use_cases.ingest_documents.detect") as mock_detect:
         from langdetect import LangDetectException
+
         mock_detect.side_effect = LangDetectException(0, "fail")
         result = _detect_language("!!!###")
 

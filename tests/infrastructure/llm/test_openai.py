@@ -1,6 +1,3 @@
-pytestmark = pytest.mark.integration
-
-
 from __future__ import annotations
 
 import os
@@ -12,6 +9,8 @@ from src.config.settings import Settings
 from src.domain.ports.dto import GenerationRequest
 from src.infrastructure.llm.errors import LLMError
 from src.infrastructure.llm.openai import OpenAILLM
+
+pytestmark = pytest.mark.integration
 
 _PATCH_TARGET = "src.infrastructure.llm.openai.ChatOpenAI"
 

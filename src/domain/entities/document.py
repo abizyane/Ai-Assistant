@@ -1,4 +1,5 @@
 """Document aggregate root — represents a single ingested source file."""
+
 from __future__ import annotations
 
 import uuid

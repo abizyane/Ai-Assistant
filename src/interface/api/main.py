@@ -186,9 +186,7 @@ async def get_session(session_id: str, repo: SessionRepoDep) -> SessionResponse:
     messages = await repo.get_history(session_id)
     return SessionResponse(
         session_id=session_id,
-        messages=[
-            MessageOut(role=m.role.value, content=m.content) for m in messages
-        ],
+        messages=[MessageOut(role=m.role.value, content=m.content) for m in messages],
     )
 
 

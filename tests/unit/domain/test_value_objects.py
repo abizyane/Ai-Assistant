@@ -1,4 +1,5 @@
 """Tests for domain value objects."""
+
 from __future__ import annotations
 
 import pytest

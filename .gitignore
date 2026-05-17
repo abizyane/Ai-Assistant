@@ -1,5 +1,5 @@
 # Virtual environment
-.venv
+.venv/
 
 # Environment secrets
 .env
@@ -9,7 +9,6 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
-*.pycache
 
 # Test / coverage
 .pytest_cache/
@@ -43,5 +42,10 @@ hf_cache/
 .vscode/
 *.swp
 *.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Orchestrator state (do not commit)
 .sisyphus/
-AGENTS.md

@@ -1,121 +1,74 @@
 # Observability
 
-## Langfuse Tracing
+Every request is traceable, every component is measured, every log line is queryable.
 
-Every request through the agentic RAG pipeline is traced end-to-end in Langfuse.
+## Tracing — Langfuse
 
-### Setup
+Langfuse is the system of record for LLM interactions. Each query opens a trace that
+spans the full agentic loop:
 
-```bash
-# In .env
-RAG_LANGFUSE__ENABLED=true
+- root span: `answer_query` with input + output
+- child spans: `retrieve`, `rerank`, `generate`, `validate`
+- LLM generations recorded with model, prompt, completion, token counts, cost
+
+Configuration:
+
+```env
 RAG_LANGFUSE__HOST=http://localhost:3000
-RAG_LANGFUSE__PUBLIC_KEY=<your-public-key>
-RAG_LANGFUSE__SECRET_KEY=<your-secret-key>
+RAG_LANGFUSE__PUBLIC_KEY=...
+RAG_LANGFUSE__SECRET_KEY=...
+RAG_LANGFUSE__ENABLED=true
 ```
 
-### Span Tree
+Open the UI: http://localhost:3000 (after `make demo`).
 
-Each request produces a trace with the following span hierarchy:
+The Langfuse adapter implements `TracerPort` (`src/infrastructure/observability/`). To
+disable in tests, swap to a no-op adapter in the DI container.
 
-```
-answer (root)
-├── rewrite          — query rewriting; input: raw query; output: rewritten query
-├── retrieve         — hybrid search + rerank; output: top-k chunks with scores
-│   ├── dense_search
-│   ├── sparse_search
-│   ├── rrf_fusion
-│   └── rerank
-├── grade            — relevance grading; output: pass/fail per chunk
-├── generate         — answer synthesis; output: answer + citations
-└── verify           — faithfulness check; output: pass/fail
-```
+## Metrics — Prometheus
 
-Every span records: input tokens, output tokens, model name, latency, and cost estimate.
+Prometheus scrapes `app:8000/metrics`. Custom metrics:
 
-## Prometheus Metrics
+| Metric | Type | Labels |
+|--------|------|--------|
+| `rag_query_seconds` | Histogram | `route`, `status` |
+| `rag_tokens_total` | Counter | `provider`, `model`, `direction` |
+| `rag_retrieval_hits` | Counter | `mode` (`dense`/`sparse`/`fused`) |
+| `rag_rerank_seconds` | Histogram | — |
+| `rag_eval_score` | Gauge | `metric` |
 
-The API exposes `/metrics` (default port 9090). All metrics use the `rag_` prefix.
+Scrape config: `infra/prometheus/prometheus.yml`.
+Alert rules: `infra/prometheus/rules/`.
 
-| Metric | Type | Labels | Description |
-|--------|------|--------|-------------|
-| `rag_requests_total` | Counter | `endpoint`, `status` | Total HTTP requests |
-| `rag_request_duration_seconds` | Histogram | `endpoint` | Request latency |
-| `rag_llm_tokens_total` | Counter | `provider`, `model`, `type` | Token usage (input/output) |
-| `rag_llm_cost_usd_total` | Counter | `provider`, `model` | Estimated LLM cost |
-| `rag_retrieval_chunks_returned` | Histogram | `stage` | Chunks at each retrieval stage |
-| `rag_agent_iterations_total` | Histogram | — | Agent loop iterations per request |
-| `rag_eval_score` | Gauge | `metric`, `language` | Latest Ragas eval scores |
-| `rag_ingest_documents_total` | Counter | `status` | Documents ingested |
+Open the UI: http://localhost:9090.
 
-## Grafana Dashboards
+## Dashboards — Grafana
 
-Three dashboards are provisioned automatically at `http://localhost:3001`:
+Three pre-provisioned dashboards live under `infra/grafana/dashboards/`:
 
-### RAG Operations (`grafana/dashboards/rag-ops.json`)
+- **RAG ops** — query latency, error rate, retrieval hits per mode
+- **LLM costs** — token rate by provider/model, cumulative cost
+- **Eval trends** — last 30 days of Ragas scores per metric
 
-- Request rate and error rate (5m window)
-- P50/P95/P99 latency by endpoint
-- Agent iteration distribution
-- Retrieval chunk counts at each stage
+Provisioning: `infra/grafana/provisioning/` (data sources + dashboard loader).
 
-### LLM Costs (`grafana/dashboards/llm-costs.json`)
+Open the UI: http://localhost:3001 (default `admin/admin`).
 
-- Token usage rate by model
-- Cumulative cost by provider
-- Cost per request (rolling average)
-- Token efficiency (output/input ratio)
+## Logs — Loki
 
-### Eval Trends (`grafana/dashboards/eval-trends.json`)
+`structlog` emits JSON log lines from the app. Loki ingests them with labels
+(`service`, `level`, `trace_id`). Grafana's Explore tab can correlate logs with
+Prometheus metrics by `trace_id` for full request-level forensics.
 
-- Faithfulness score over time by language
-- Answer relevancy trend
-- Context precision trend
-- Threshold breach alerts
+Loki config: `infra/loki/loki-config.yml`.
 
-## Loki Log Queries
+## Alerting
 
-Structured JSON logs are shipped to Loki. Useful queries:
+Prometheus rules in `infra/prometheus/rules/` define alerts for:
 
-```logql
-# All errors in the last hour
-{app="rag-assistant"} | json | level="error"
+- p99 query latency > 5s for 10 minutes
+- error rate > 5% for 5 minutes
+- faithfulness score < 0.80 (set from `rag_eval_score{metric="faithfulness"}`)
 
-# Slow requests (>5s)
-{app="rag-assistant"} | json | duration_ms > 5000
-
-# Agent retries
-{app="rag-assistant"} | json | event="agent_retry"
-
-# Retrieval grade failures
-{app="rag-assistant"} | json | event="grade_fail"
-```
-
-## Alert Runbook
-
-### `RagHighErrorRate`
-
-**Condition**: `rate(rag_requests_total{status="5xx"}[5m]) > 0.05`
-
-**Action**:
-1. Check `docker compose logs api` for stack traces.
-2. Verify Postgres connectivity: `make smoke`.
-3. Check LLM API key validity and quota.
-
-### `RagHighLatency`
-
-**Condition**: `histogram_quantile(0.95, rag_request_duration_seconds) > 10`
-
-**Action**:
-1. Check reranker model load time (first request after cold start is slow).
-2. Verify pgvector HNSW index exists: `SELECT * FROM pg_indexes WHERE tablename='chunks'`.
-3. Check LLM provider latency via Langfuse trace waterfall.
-
-### `RagEvalScoreBelowThreshold`
-
-**Condition**: `rag_eval_score{metric="faithfulness"} < 0.85`
-
-**Action**:
-1. Run `make eval` locally to reproduce.
-2. Inspect failing rows in Langfuse (filter by low faithfulness score).
-3. Check if knowledge base was updated without re-ingestion.
+Alertmanager is not bundled — wire your preferred receiver (Slack, PagerDuty, email)
+to Prometheus' `--alertmanager.url` flag in production.

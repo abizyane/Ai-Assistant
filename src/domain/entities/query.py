@@ -1,4 +1,5 @@
 """Query entity — a user query entering the agent pipeline."""
+
 from __future__ import annotations
 
 import uuid

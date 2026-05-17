@@ -166,11 +166,7 @@ def _extract_headings(document: object) -> list[str]:
     try:
         from docling_core.types.doc import SectionHeaderItem
 
-        return [
-            item.orig
-            for item in document.texts
-            if isinstance(item, SectionHeaderItem)
-        ]
+        return [item.orig for item in document.texts if isinstance(item, SectionHeaderItem)]
     except Exception:
         return []
 

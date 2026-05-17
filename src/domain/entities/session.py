@@ -1,4 +1,5 @@
 """Session and Message entities — conversation state."""
+
 from __future__ import annotations
 
 import uuid

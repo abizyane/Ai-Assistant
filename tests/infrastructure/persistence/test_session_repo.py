@@ -1,6 +1,3 @@
-pytestmark = pytest.mark.integration
-
-
 """Tests for SessionRepository — unit (mocked) and integration (skipif no DB)."""
 
 from __future__ import annotations
@@ -16,6 +13,8 @@ from ulid import ULID
 
 from src.domain.entities.session import Message, MessageRole
 from src.infrastructure.persistence.session_repo import SessionRepository
+
+pytestmark = pytest.mark.integration
 
 
 def _make_factory(mock_session: AsyncSession) -> MagicMock:

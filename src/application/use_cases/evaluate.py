@@ -60,9 +60,7 @@ def default_agent_runner(
     """
 
     async def _run(query: str, language: str | None) -> AnswerWithCitations:
-        state: dict[str, Any] = await graph.ainvoke(
-            {"query": query, "language": language or "en"}
-        )
+        state: dict[str, Any] = await graph.ainvoke({"query": query, "language": language or "en"})
         answer: AnswerWithCitations | None = state.get("final_answer")
         if answer is None:
             return AnswerWithCitations(

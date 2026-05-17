@@ -125,9 +125,7 @@ def _make_grade_node(grade_llm: LLMPort) -> object:
     return grade_relevance_node
 
 
-def _filter_by_grades(
-    chunks: list[RetrievedChunk], grades: list[bool]
-) -> list[RetrievedChunk]:
+def _filter_by_grades(chunks: list[RetrievedChunk], grades: list[bool]) -> list[RetrievedChunk]:
     if grades and len(grades) == len(chunks):
         return [c for c, ok in zip(chunks, grades, strict=True) if ok]
     return chunks

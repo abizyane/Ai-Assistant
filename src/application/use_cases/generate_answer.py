@@ -1,4 +1,5 @@
 """Generate-answer use case — turns retrieved chunks into a grounded answer."""
+
 from __future__ import annotations
 
 import logging

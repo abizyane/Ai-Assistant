@@ -30,7 +30,7 @@ C_RESET  := \033[0m
         test test-unit test-integration test-e2e smoke eval \
         db-migrate db-rollback db-revision db-shell \
         traces metrics dashboards \
-        install precommit-install precommit-run
+        install
 
 # ─────────────────────────────────────────────────────────────────────────────
 # help  (default target — auto-generated from ## comments)
@@ -61,7 +61,7 @@ help:  ## Show this help message
 	    | awk 'BEGIN {FS = ":.*## "}; {printf "  make %-22s %s\n", $$1, $$2}'
 	@echo ""
 	@printf "$(C_GREEN)Development:$(C_RESET)\n"
-	@grep -E '^(install|precommit-install|precommit-run)[[:space:]]*:.*## ' $(MAKEFILE_LIST) \
+	@grep -E '^(install)[[:space:]]*:.*## ' $(MAKEFILE_LIST) \
 	    | awk 'BEGIN {FS = ":.*## "}; {printf "  make %-22s %s\n", $$1, $$2}'
 	@echo ""
 
@@ -244,13 +244,3 @@ install:  ## Install all Python dependencies (including dev extras) with uv
 	@printf "$(C_YELLOW)Installing dependencies…$(C_RESET)\n"
 	$(UV) sync --all-extras --dev
 	@printf "$(C_GREEN)Dependencies installed.$(C_RESET)\n"
-
-precommit-install:  ## Install pre-commit hooks into .git/hooks/
-	@printf "$(C_YELLOW)Installing pre-commit hooks…$(C_RESET)\n"
-	pre-commit install
-	@printf "$(C_GREEN)Pre-commit hooks installed.$(C_RESET)\n"
-
-precommit-run:  ## Run all pre-commit hooks against all files
-	@printf "$(C_YELLOW)Running pre-commit on all files…$(C_RESET)\n"
-	pre-commit run --all-files
-	@printf "$(C_GREEN)Pre-commit passed.$(C_RESET)\n"

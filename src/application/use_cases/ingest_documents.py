@@ -1,5 +1,3 @@
-"""Ingestion pipeline use case — load, chunk, embed, upsert documents."""
-
 from __future__ import annotations
 
 import hashlib
@@ -30,7 +28,6 @@ _UNKNOWN_LANG = "unknown"
 
 
 def _hash_file(path: Path) -> str:
-    """Compute SHA-256 hex digest of a file, reading in 8 KB blocks."""
     digest = hashlib.sha256()
     with path.open("rb") as fh:
         while chunk := fh.read(_HASH_CHUNK_BYTES):
@@ -39,7 +36,6 @@ def _hash_file(path: Path) -> str:
 
 
 def _detect_language(text: str) -> str:
-    """Return ISO-639-1 language code for *text*, or 'unknown' on failure."""
     try:
         return str(detect(text))
     except LangDetectException:
@@ -75,7 +71,6 @@ class IngestDocumentsUseCase:
         tracer: TracerPort,
         logger: logging.Logger,
     ) -> None:
-        """Store injected dependencies."""
         self._loader = loader
         self._chunker = chunker
         self._embedder = embedder
@@ -137,8 +132,7 @@ class IngestDocumentsUseCase:
                 self._logger.error("Ingestion failed for %s: %s", file_path, exc)
                 errors.append((str(file_path), str(exc)))
 
-        for _ in range(chunks_created):
-            inc_counter("ingestion_chunks_total")
+        inc_counter("ingestion_chunks_total", amount=chunks_created)
 
         duration = time.perf_counter() - start
         observe_histogram("ingestion_duration_seconds", duration)
@@ -164,7 +158,6 @@ class IngestDocumentsUseCase:
         return []
 
     async def _is_already_ingested(self, file_hash: str) -> bool:
-        """Return True when *file_hash* already exists in ``ingestion_runs``."""
         async with self._session_factory() as session:
             result = await session.execute(
                 select(IngestionRunORM).where(IngestionRunORM.source_hash == file_hash)
@@ -235,13 +228,6 @@ class IngestDocumentsUseCase:
         file_hash: str,
         chunks_created: int,
     ) -> None:
-        """Persist an :class:`IngestionRunORM` row for *file_path*.
-
-        Args:
-            file_path: Source file that was ingested.
-            file_hash: SHA-256 hex digest of the file.
-            chunks_created: Number of chunks produced from this file.
-        """
         run = IngestionRunORM(
             source_path=str(file_path),
             source_hash=file_hash,
@@ -268,9 +254,7 @@ class IngestDocumentsUseCase:
         hash is a no-op.
         """
         async with self._session_factory() as session:
-            existing = await session.execute(
-                select(DocumentORM).where(DocumentORM.id == doc_id)
-            )
+            existing = await session.execute(select(DocumentORM).where(DocumentORM.id == doc_id))
             if existing.scalar_one_or_none() is not None:
                 return
             session.add(

@@ -1,13 +1,43 @@
 """Language value object — validated ISO-639-1 language code."""
+
 from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-_VALID_CODES: frozenset[str] = frozenset([
-    "en", "fr", "ar", "es", "de", "it", "pt", "zh", "ja", "ko",
-    "nl", "pl", "ru", "sv", "tr", "he", "fa", "ur", "hi", "vi",
-    "id", "ms", "th", "uk", "cs", "ro", "hu", "fi", "da", "no",
-])
+_VALID_CODES: frozenset[str] = frozenset(
+    [
+        "en",
+        "fr",
+        "ar",
+        "es",
+        "de",
+        "it",
+        "pt",
+        "zh",
+        "ja",
+        "ko",
+        "nl",
+        "pl",
+        "ru",
+        "sv",
+        "tr",
+        "he",
+        "fa",
+        "ur",
+        "hi",
+        "vi",
+        "id",
+        "ms",
+        "th",
+        "uk",
+        "cs",
+        "ro",
+        "hu",
+        "fi",
+        "da",
+        "no",
+    ]
+)
 
 
 class Language(BaseModel):

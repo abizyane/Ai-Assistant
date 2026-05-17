@@ -79,7 +79,9 @@ async def _expect_loader_error(loader: Any, path: str) -> LoaderError:
 
 
 class TestDoclingLoaderMissing:
-    def test_raises_loader_error_for_nonexistent_path(self, settings: Any, fake_converter: MagicMock) -> None:  # noqa: E501
+    def test_raises_loader_error_for_nonexistent_path(
+        self, settings: Any, fake_converter: MagicMock
+    ) -> None:
         with patch("docling.document_converter.DocumentConverter", return_value=fake_converter):
             from src.infrastructure.loading.docling_loader import DoclingLoader
 
@@ -110,6 +112,7 @@ class TestDoclingLoaderSingleFile:
             from importlib import reload
 
             import src.infrastructure.loading.docling_loader as mod
+
             reload(mod)
             loader = mod.DoclingLoader(settings)
 
@@ -157,6 +160,7 @@ class TestDoclingLoaderDirectory:
             from importlib import reload
 
             import src.infrastructure.loading.docling_loader as mod
+
             reload(mod)
             loader = mod.DoclingLoader(settings)
             results = await loader.load(tmp_path)
@@ -169,9 +173,7 @@ class TestDoclingLoaderDirectory:
 
 class TestDoclingLoaderSkipsFailedFiles:
     @pytest.mark.asyncio
-    async def test_failed_file_skipped_others_returned(
-        self, tmp_path: Path, settings: Any
-    ) -> None:
+    async def test_failed_file_skipped_others_returned(self, tmp_path: Path, settings: Any) -> None:
         ok_file = tmp_path / "ok.md"
         bad_file = tmp_path / "bad.pdf"
         ok_file.write_text("# OK")
@@ -196,6 +198,7 @@ class TestDoclingLoaderSkipsFailedFiles:
             from importlib import reload
 
             import src.infrastructure.loading.docling_loader as mod
+
             reload(mod)
             loader = mod.DoclingLoader(settings)
             results = await loader.load(tmp_path)
@@ -208,30 +211,39 @@ class TestDoclingLoaderSupports:
     def test_supports_pdf(self, tmp_path: Path, settings: Any, fake_converter: MagicMock) -> None:
         with patch("docling.document_converter.DocumentConverter", return_value=fake_converter):
             from src.infrastructure.loading.docling_loader import DoclingLoader
+
             loader = DoclingLoader(settings)
         assert loader.supports(str(tmp_path / "x.pdf")) is True
 
     def test_supports_md(self, tmp_path: Path, settings: Any, fake_converter: MagicMock) -> None:
         with patch("docling.document_converter.DocumentConverter", return_value=fake_converter):
             from src.infrastructure.loading.docling_loader import DoclingLoader
+
             loader = DoclingLoader(settings)
         assert loader.supports(str(tmp_path / "x.md")) is True
 
     def test_supports_html(self, tmp_path: Path, settings: Any, fake_converter: MagicMock) -> None:
         with patch("docling.document_converter.DocumentConverter", return_value=fake_converter):
             from src.infrastructure.loading.docling_loader import DoclingLoader
+
             loader = DoclingLoader(settings)
         assert loader.supports(str(tmp_path / "x.html")) is True
 
-    def test_does_not_support_txt(self, tmp_path: Path, settings: Any, fake_converter: MagicMock) -> None:  # noqa: E501
+    def test_does_not_support_txt(
+        self, tmp_path: Path, settings: Any, fake_converter: MagicMock
+    ) -> None:
         with patch("docling.document_converter.DocumentConverter", return_value=fake_converter):
             from src.infrastructure.loading.docling_loader import DoclingLoader
+
             loader = DoclingLoader(settings)
         assert loader.supports(str(tmp_path / "x.txt")) is False
 
-    def test_supports_directory(self, tmp_path: Path, settings: Any, fake_converter: MagicMock) -> None:  # noqa: E501
+    def test_supports_directory(
+        self, tmp_path: Path, settings: Any, fake_converter: MagicMock
+    ) -> None:
         with patch("docling.document_converter.DocumentConverter", return_value=fake_converter):
             from src.infrastructure.loading.docling_loader import DoclingLoader
+
             loader = DoclingLoader(settings)
         assert loader.supports(str(tmp_path)) is True
 
@@ -250,4 +262,3 @@ class TestLoaderError:
     def test_loader_error_is_exception(self) -> None:
         err = LoaderError("boom")
         assert isinstance(err, Exception)
-

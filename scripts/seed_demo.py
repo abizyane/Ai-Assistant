@@ -8,7 +8,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-os.environ.setdefault("RAG_VECTORSTORE__DATABASE_URL", "postgresql+asyncpg://raguser:ragpassword@localhost:5432/ragdb")
+os.environ.setdefault(
+    "RAG_VECTORSTORE__DATABASE_URL", "postgresql+asyncpg://raguser:ragpassword@localhost:5432/ragdb"
+)
 
 
 async def _count_existing_chunks(engine) -> int:  # type: ignore[no-untyped-def]
@@ -50,7 +52,9 @@ async def main() -> None:
         documents.extend(kb_path.glob(f"**/*{suffix}"))
 
     if not documents:
-        print(f"[seed_demo] No documents found in {kb_path}. Drop PDFs, Markdown, or HTML files there first.")
+        print(
+            f"[seed_demo] No documents found in {kb_path}. Drop PDFs, Markdown, or HTML files there first."
+        )
         await engine.dispose()
         return
 

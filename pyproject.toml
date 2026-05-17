@@ -96,10 +96,12 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "SIM", "RUF", "ANN", "D"]
-ignore = ["D100", "D104", "D203", "D213"]
+ignore = ["D100", "D102", "D104", "D107", "D203", "D213"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["D", "ANN"]
+"tests/*" = ["D", "ANN", "E501"]
+"evals/*" = ["D", "ANN", "E501"]
+"scripts/*" = ["D", "ANN", "E501"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 10

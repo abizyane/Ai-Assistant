@@ -99,9 +99,7 @@ class SessionRepository:
         async with self._session_factory() as db:
             db.add(msg_orm)
             await db.execute(
-                update(SessionORM)
-                .where(SessionORM.id == session_uuid)
-                .values(last_active=now)
+                update(SessionORM).where(SessionORM.id == session_uuid).values(last_active=now)
             )
             await db.commit()
         inc_counter(_METRIC_MESSAGES_APPENDED, {"role": role})
@@ -194,9 +192,7 @@ class SessionRepository:
             :class:`~src.domain.entities.session.Session` domain entity.
         """
         async with self._session_factory() as db:
-            result = await db.execute(
-                select(SessionORM).where(SessionORM.id == session_id)
-            )
+            result = await db.execute(select(SessionORM).where(SessionORM.id == session_id))
             orm = result.scalar_one_or_none()
             if orm is None:
                 now = datetime.now(UTC)

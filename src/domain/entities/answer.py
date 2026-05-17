@@ -1,4 +1,5 @@
 """Answer DTOs returned by the generate-answer use case."""
+
 from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field

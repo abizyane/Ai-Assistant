@@ -1,4 +1,5 @@
 """Citation entity — a source chunk referenced in an Answer."""
+
 from __future__ import annotations
 
 import uuid

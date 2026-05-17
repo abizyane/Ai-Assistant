@@ -74,9 +74,7 @@ async def client(monkeypatch):
     monkeypatch.setattr("src.infrastructure.di.build_embedder", lambda s=None: MagicMock())
     monkeypatch.setattr("src.infrastructure.di.build_reranker", lambda s=None: MagicMock())
 
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as c:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
         yield c
 
 
@@ -96,19 +94,13 @@ async def test_health_db_fail(monkeypatch):
     mock_engine.dispose = AsyncMock(return_value=None)
 
     monkeypatch.setattr("src.infrastructure.di.build_agent", lambda s=None: MagicMock())
-    monkeypatch.setattr(
-        "src.infrastructure.di.build_ingest_use_case", lambda s=None: MagicMock()
-    )
-    monkeypatch.setattr(
-        "src.infrastructure.di.build_session_repo", lambda s=None: MagicMock()
-    )
+    monkeypatch.setattr("src.infrastructure.di.build_ingest_use_case", lambda s=None: MagicMock())
+    monkeypatch.setattr("src.infrastructure.di.build_session_repo", lambda s=None: MagicMock())
     monkeypatch.setattr("src.infrastructure.di.build_engine", lambda s=None: mock_engine)
     monkeypatch.setattr("src.infrastructure.di.build_embedder", lambda s=None: MagicMock())
     monkeypatch.setattr("src.infrastructure.di.build_reranker", lambda s=None: MagicMock())
 
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as c:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
         resp = await c.get("/health")
     assert resp.status_code == 200
     body = resp.json()
@@ -175,17 +167,13 @@ async def test_sessions_with_messages(monkeypatch):
     mock_engine.connect = MagicMock(return_value=mock_conn)
 
     monkeypatch.setattr("src.infrastructure.di.build_agent", lambda s=None: MagicMock())
-    monkeypatch.setattr(
-        "src.infrastructure.di.build_ingest_use_case", lambda s=None: MagicMock()
-    )
+    monkeypatch.setattr("src.infrastructure.di.build_ingest_use_case", lambda s=None: MagicMock())
     monkeypatch.setattr("src.infrastructure.di.build_session_repo", lambda s=None: mock_repo)
     monkeypatch.setattr("src.infrastructure.di.build_engine", lambda s=None: mock_engine)
     monkeypatch.setattr("src.infrastructure.di.build_embedder", lambda s=None: MagicMock())
     monkeypatch.setattr("src.infrastructure.di.build_reranker", lambda s=None: MagicMock())
 
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as c:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
         resp = await c.get("/sessions/01KRNJ2MNPN1DMJPFNQV41K4SZ")
 
     assert resp.status_code == 200
@@ -214,19 +202,13 @@ async def test_sync_chat_agent_error(monkeypatch):
     mock_engine.connect = MagicMock(return_value=mock_conn)
 
     monkeypatch.setattr("src.infrastructure.di.build_agent", lambda s=None: mock_agent)
-    monkeypatch.setattr(
-        "src.infrastructure.di.build_ingest_use_case", lambda s=None: MagicMock()
-    )
-    monkeypatch.setattr(
-        "src.infrastructure.di.build_session_repo", lambda s=None: MagicMock()
-    )
+    monkeypatch.setattr("src.infrastructure.di.build_ingest_use_case", lambda s=None: MagicMock())
+    monkeypatch.setattr("src.infrastructure.di.build_session_repo", lambda s=None: MagicMock())
     monkeypatch.setattr("src.infrastructure.di.build_engine", lambda s=None: mock_engine)
     monkeypatch.setattr("src.infrastructure.di.build_embedder", lambda s=None: MagicMock())
     monkeypatch.setattr("src.infrastructure.di.build_reranker", lambda s=None: MagicMock())
 
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as c:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
         resp = await c.post("/chat/sync", json={"query": "test"})
 
     assert resp.status_code in (500, 422)

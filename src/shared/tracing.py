@@ -89,7 +89,8 @@ def traced(span_name: str, **default_attrs: Any) -> Callable[[_F], _F]:  # noqa:
 
             @functools.wraps(func)
             async def _asyncgen_wrapper(
-                *args: Any, **kwargs: Any  # noqa: ANN401
+                *args: Any,  # noqa: ANN401
+                **kwargs: Any,  # noqa: ANN401
             ) -> AsyncGenerator[Any, None]:
                 tracer = get_tracer(func.__module__ or __name__)
                 attrs = dict(default_attrs) if default_attrs else None

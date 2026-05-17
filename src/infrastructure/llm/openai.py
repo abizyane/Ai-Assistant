@@ -40,12 +40,6 @@ class OpenAILLM(BaseLLM):
         settings: Settings,
         tracer: TracerPort | None = None,
     ) -> None:
-        """Initialize OpenAI adapter with settings and an optional tracer.
-
-        Args:
-            settings: Application settings providing LLM configuration.
-            tracer: Optional tracing adapter for GenAI observability spans.
-        """
         super().__init__(settings)
         self._tracer = tracer
         api_key = settings.llm.api_key.get_secret_value()
@@ -60,31 +54,16 @@ class OpenAILLM(BaseLLM):
         self._client: ChatOpenAI = ChatOpenAI(**client_kwargs)
 
     def _should_retry(self, exc: BaseException) -> bool:
-        """Retry on OpenAI 5xx errors, rate-limit (429), and API timeouts.
-
-        Args:
-            exc: Exception to evaluate.
-
-        Returns:
-            True if the call should be retried, False otherwise.
-        """
+        """Retry on OpenAI 5xx errors, rate-limit (429), and API timeouts."""
         import openai
 
         if isinstance(exc, openai.InternalServerError):
             return True
         if isinstance(exc, openai.RateLimitError):
             return True
-        return bool(isinstance(exc, openai.APITimeoutError))
+        return isinstance(exc, openai.APITimeoutError)
 
     def _wrap_exception(self, exc: Exception) -> LLMError:
-        """Map an OpenAI provider exception to a specific LLMError subclass.
-
-        Args:
-            exc: Provider exception to map.
-
-        Returns:
-            A specific ``LLMError`` subclass matching the error type.
-        """
         import openai
 
         if isinstance(exc, openai.APITimeoutError):
@@ -96,14 +75,6 @@ class OpenAILLM(BaseLLM):
         return LLMError(str(exc), provider=self.PROVIDER, original=exc)
 
     def _build_messages(self, request: GenerationRequest) -> list[BaseMessage]:
-        """Convert GenerationRequest to a list of LangChain message objects.
-
-        Args:
-            request: Generation request with messages and optional system prompt.
-
-        Returns:
-            List of ``BaseMessage`` objects ready for model invocation.
-        """
         messages: list[BaseMessage] = []
         if request.system_prompt:
             messages.append(SystemMessage(content=request.system_prompt))
@@ -122,12 +93,6 @@ class OpenAILLM(BaseLLM):
         Emits a GenAI observability span (if tracer provided) with attributes:
         ``gen_ai.system``, ``gen_ai.request.model``, ``gen_ai.usage.input_tokens``,
         ``gen_ai.usage.output_tokens``.
-
-        Args:
-            request: Generation request.
-
-        Returns:
-            GenerationResult with text content and token usage metadata.
         """
         messages = self._build_messages(request)
         ctx = (
@@ -183,19 +148,11 @@ class OpenAILLM(BaseLLM):
         )
 
     def _do_stream(self, request: GenerationRequest) -> AsyncIterator[str]:
-        """Return an async generator that streams tokens from OpenAI.
-
-        Args:
-            request: Generation request.
-
-        Returns:
-            Async iterator yielding text tokens as they arrive.
-        """
         messages = self._build_messages(request)
 
         async def _gen() -> AsyncGenerator[str, None]:
             async for chunk in self._client.astream(messages):
-                content: Any = chunk.content
+                content = chunk.content
                 if isinstance(content, str) and content:
                     yield content
 

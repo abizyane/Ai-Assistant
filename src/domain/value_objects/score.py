@@ -1,4 +1,5 @@
 """Score value object — a typed numeric relevance or evaluation score."""
+
 from __future__ import annotations
 
 from enum import StrEnum

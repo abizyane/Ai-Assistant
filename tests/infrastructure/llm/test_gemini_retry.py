@@ -85,9 +85,10 @@ async def test_max_retries_exceeded_raises_llm_provider_error(settings: Settings
     with patch(_PATCH_TARGET) as mock_cls:
         gemini, mock_client = _make_gemini(mock_cls, settings)
         mock_client.ainvoke = AsyncMock(side_effect=server_err)
-        with patch("asyncio.sleep", new_callable=AsyncMock), pytest.raises(
-            LLMProviderError
-        ) as exc_info:
+        with (
+            patch("asyncio.sleep", new_callable=AsyncMock),
+            pytest.raises(LLMProviderError) as exc_info,
+        ):
             await gemini.generate(request)
 
     assert exc_info.value.provider == "gemini"

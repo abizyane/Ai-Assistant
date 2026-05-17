@@ -33,9 +33,7 @@ def _get_or_create_counter(name: str, labels: list[str] | None = None) -> Counte
 
 def _get_or_create_histogram(name: str, labels: list[str] | None = None) -> Histogram:
     if name not in _HISTOGRAMS:
-        _HISTOGRAMS[name] = Histogram(
-            name, name.replace("_", " "), labels or [], registry=REGISTRY
-        )
+        _HISTOGRAMS[name] = Histogram(name, name.replace("_", " "), labels or [], registry=REGISTRY)
     return _HISTOGRAMS[name]
 
 
@@ -45,13 +43,17 @@ def _get_or_create_gauge(name: str, labels: list[str] | None = None) -> Gauge:
     return _GAUGES[name]
 
 
-def inc_counter(name: str, labels: dict[str, str] | None = None) -> None:
-    """Increment a counter metric by 1."""
+def inc_counter(
+    name: str,
+    labels: dict[str, str] | None = None,
+    amount: int = 1,
+) -> None:
+    """Increment a counter metric by *amount* (default 1)."""
     c = _get_or_create_counter(name, list(labels.keys()) if labels else None)
     if labels:
-        c.labels(**labels).inc()
+        c.labels(**labels).inc(amount)
     else:
-        c.inc()
+        c.inc(amount)
 
 
 def observe_histogram(name: str, value: float, labels: dict[str, str] | None = None) -> None:
@@ -77,6 +79,7 @@ F = TypeVar("F", bound=Callable[..., Any])
 
 def track_latency(metric_name: str, labels: dict[str, str] | None = None) -> Callable[[F], F]:
     """Decorator: records function execution time into a histogram."""
+
     def decorator(fn: F) -> F:
         @functools.wraps(fn)
         def wrapper(*args: Any, **kwargs: Any) -> Any:  # noqa: ANN401
@@ -85,7 +88,9 @@ def track_latency(metric_name: str, labels: dict[str, str] | None = None) -> Cal
                 return fn(*args, **kwargs)
             finally:
                 observe_histogram(metric_name, time.perf_counter() - start, labels)
+
         return wrapper  # type: ignore[return-value] — wrapper preserves callable signature via functools.wraps
+
     return decorator
 
 

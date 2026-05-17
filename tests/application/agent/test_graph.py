@@ -38,9 +38,7 @@ def _llm_with(responses: list[str]) -> MagicMock:
 
     async def _generate(_request: object) -> GenerationResult:
         text = queue.pop(0) if queue else "no"
-        return GenerationResult(
-            text=text, input_tokens=1, output_tokens=1, model="mock"
-        )
+        return GenerationResult(text=text, input_tokens=1, output_tokens=1, model="mock")
 
     mock.generate = AsyncMock(side_effect=_generate)
     return mock
@@ -96,9 +94,7 @@ async def test_rewrite_when_irrelevant(
     )
     graph = build_agent_graph(retrieve_uc, generate_uc, grade_llm, settings)
 
-    final: AgentState = await graph.ainvoke(
-        {"query": "Tell me about Paris", "language": "en"}
-    )
+    final: AgentState = await graph.ainvoke({"query": "Tell me about Paris", "language": "en"})
 
     assert retrieve_uc.execute.await_count == 2
     assert generate_uc.execute.await_count == 1
@@ -119,9 +115,7 @@ async def test_retry_on_ungrounded(
     )
     graph = build_agent_graph(retrieve_uc, generate_uc, grade_llm, settings)
 
-    final: AgentState = await graph.ainvoke(
-        {"query": "Capital of France?", "language": "en"}
-    )
+    final: AgentState = await graph.ainvoke({"query": "Capital of France?", "language": "en"})
 
     assert retrieve_uc.execute.await_count == 1
     assert generate_uc.execute.await_count == 2
@@ -135,9 +129,7 @@ async def test_loop_bounds_respected(
     grade_llm = MagicMock()
 
     async def _always(_request: object) -> GenerationResult:
-        return GenerationResult(
-            text="no", input_tokens=1, output_tokens=1, model="mock"
-        )
+        return GenerationResult(text="no", input_tokens=1, output_tokens=1, model="mock")
 
     grade_llm.generate = AsyncMock(side_effect=_always)
 

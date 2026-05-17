@@ -43,12 +43,6 @@ class GeminiLLM(BaseLLM):
         settings: Settings,
         tracer: TracerPort | None = None,
     ) -> None:
-        """Initialize Gemini adapter with settings and an optional tracer.
-
-        Args:
-            settings: Application settings providing LLM configuration.
-            tracer: Optional tracing adapter for GenAI observability spans.
-        """
         super().__init__(settings)
         self._tracer = tracer
         api_key = settings.llm.api_key.get_secret_value()
@@ -60,14 +54,7 @@ class GeminiLLM(BaseLLM):
         )
 
     def _should_retry(self, exc: BaseException) -> bool:
-        """Retry on Gemini 5xx errors, rate-limit (429), and HTTP timeouts.
-
-        Args:
-            exc: Exception to evaluate.
-
-        Returns:
-            True if the call should be retried, False otherwise.
-        """
+        """Retry on Gemini 5xx errors, rate-limit (429), and HTTP timeouts."""
         import httpx
         from google.genai.errors import ClientError, ServerError
 
@@ -75,17 +62,9 @@ class GeminiLLM(BaseLLM):
             return True
         if isinstance(exc, ClientError) and exc.code == _RATE_LIMIT_CODE:
             return True
-        return bool(isinstance(exc, httpx.TimeoutException))
+        return isinstance(exc, httpx.TimeoutException)
 
     def _wrap_exception(self, exc: Exception) -> LLMError:
-        """Map a Gemini provider exception to a specific LLMError subclass.
-
-        Args:
-            exc: Provider exception to map.
-
-        Returns:
-            A specific ``LLMError`` subclass matching the error type.
-        """
         import httpx
         from google.genai.errors import ClientError, ServerError
 
@@ -98,14 +77,6 @@ class GeminiLLM(BaseLLM):
         return LLMError(str(exc), provider=self.PROVIDER, original=exc)
 
     def _build_messages(self, request: GenerationRequest) -> list[BaseMessage]:
-        """Convert GenerationRequest to a list of LangChain message objects.
-
-        Args:
-            request: Generation request with messages and optional system prompt.
-
-        Returns:
-            List of ``BaseMessage`` objects ready for model invocation.
-        """
         messages: list[BaseMessage] = []
         if request.system_prompt:
             messages.append(SystemMessage(content=request.system_prompt))
@@ -153,12 +124,6 @@ class GeminiLLM(BaseLLM):
         Emits a GenAI observability span (if tracer provided) with attributes:
         ``gen_ai.system``, ``gen_ai.request.model``, ``gen_ai.usage.input_tokens``,
         ``gen_ai.usage.output_tokens``.
-
-        Args:
-            request: Generation request.
-
-        Returns:
-            GenerationResult with text content and token usage metadata.
         """
         messages = self._build_messages(request)
         ctx = (
@@ -214,14 +179,6 @@ class GeminiLLM(BaseLLM):
         )
 
     def _do_stream(self, request: GenerationRequest) -> AsyncIterator[str]:
-        """Return an async generator that streams tokens from Gemini.
-
-        Args:
-            request: Generation request.
-
-        Returns:
-            Async iterator yielding text tokens as they arrive.
-        """
         messages = self._build_messages(request)
 
         async def _gen() -> AsyncGenerator[str, None]:

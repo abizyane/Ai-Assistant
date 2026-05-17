@@ -95,9 +95,7 @@ def test_ingest_exits_nonzero_for_nonexistent_path(monkeypatch):
     from unittest.mock import MagicMock
 
     monkeypatch.setattr("src.interface.cli.main.build_settings", lambda: MagicMock())
-    monkeypatch.setattr(
-        "src.interface.cli.main.build_ingest_use_case", lambda s=None: MagicMock()
-    )
+    monkeypatch.setattr("src.interface.cli.main.build_ingest_use_case", lambda s=None: MagicMock())
     result = runner.invoke(app, ["ingest", "/nonexistent/path/abc123"])
     assert result.exit_code != 0
 

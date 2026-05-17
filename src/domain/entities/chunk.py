@@ -1,4 +1,5 @@
 """Chunk entity — a semantic segment of a Document."""
+
 from __future__ import annotations
 
 import uuid

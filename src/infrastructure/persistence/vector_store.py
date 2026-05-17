@@ -198,9 +198,7 @@ class PGVectorStore:
             result = await session.execute(raw_sql, params)
             return [(UUID(str(row.id)), float(row.rank)) for row in result]
 
-    async def _fetch_chunks_by_ids(
-        self, chunk_ids: list[UUID]
-    ) -> dict[UUID, RetrievedChunk]:
+    async def _fetch_chunks_by_ids(self, chunk_ids: list[UUID]) -> dict[UUID, RetrievedChunk]:
         """Fetch full chunk rows for a set of IDs (used to fill RRF gaps).
 
         Args:

@@ -118,6 +118,5 @@ class BGEReranker:
         )
 
         return [
-            chunk.model_copy(update={"score": score})
-            for score, chunk in scored[: request.top_k]
+            chunk.model_copy(update={"score": score}) for score, chunk in scored[: request.top_k]
         ]

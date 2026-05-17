@@ -1,6 +1,3 @@
-pytestmark = pytest.mark.integration
-
-
 """Unit and integration tests for PGVectorStore."""
 
 from __future__ import annotations
@@ -14,6 +11,8 @@ import pytest
 from src.config.settings import Settings
 from src.domain.ports.dto import ChunkWithEmbedding, RetrievedChunk
 from src.infrastructure.persistence.vector_store import PGVectorStore
+
+pytestmark = pytest.mark.integration
 
 _DIM = 1024
 
@@ -166,9 +165,7 @@ async def test_hybrid_search_rrf_scores_are_positive() -> None:
     store._sparse_search = AsyncMock(return_value=[(chunk.chunk_id, 0.9)])  # type: ignore[method-assign]
     store._fetch_chunks_by_ids = AsyncMock(return_value={})  # type: ignore[method-assign]
 
-    results = await store.hybrid_search(
-        query_vector=_make_vector(), query_text="test", top_k=5
-    )
+    results = await store.hybrid_search(query_vector=_make_vector(), query_text="test", top_k=5)
 
     assert len(results) == 1
     assert results[0].score > 0.0
@@ -184,9 +181,7 @@ async def test_hybrid_search_respects_top_k() -> None:
     store._sparse_search = AsyncMock(return_value=sparse_pairs)  # type: ignore[method-assign]
     store._fetch_chunks_by_ids = AsyncMock(return_value={})  # type: ignore[method-assign]
 
-    results = await store.hybrid_search(
-        query_vector=_make_vector(), query_text="query", top_k=3
-    )
+    results = await store.hybrid_search(query_vector=_make_vector(), query_text="query", top_k=3)
     assert len(results) <= 3
 
 

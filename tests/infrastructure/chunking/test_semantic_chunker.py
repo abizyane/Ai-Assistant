@@ -32,7 +32,7 @@ def _doc(
 @pytest.mark.asyncio
 async def test_section_metadata_preserved() -> None:
     """Chunks carry the correct section_heading from parent document metadata."""
-    content = "Intro\nThis is the intro.\n\nBody\nThis is the body.\n\nConclusion\nThis is the conclusion."  # noqa: E501
+    content = "Intro\nThis is the intro.\n\nBody\nThis is the body.\n\nConclusion\nThis is the conclusion."
     doc = _doc(
         content=content,
         metadata={"section_headings": ["Intro", "Body", "Conclusion"]},
@@ -106,4 +106,3 @@ async def test_metadata_inherited() -> None:
     assert chunks, "Expected at least one chunk"
     for chunk in chunks:
         assert chunk.metadata["source_path"] == source
-

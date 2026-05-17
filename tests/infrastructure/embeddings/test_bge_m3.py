@@ -1,6 +1,3 @@
-pytestmark = pytest.mark.integration
-
-
 from __future__ import annotations
 
 import os
@@ -11,6 +8,8 @@ import pytest
 
 from src.config.settings import Settings
 from src.infrastructure.embeddings.bge_m3 import BGEM3Embedder
+
+pytestmark = pytest.mark.integration
 
 
 @pytest.fixture()

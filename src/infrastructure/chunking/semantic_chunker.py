@@ -162,9 +162,7 @@ class SemanticChunker:
                 sections.append((None, pre_text))
 
         for i, (pos, heading) in enumerate(positions):
-            next_pos = (
-                positions[i + 1][0] if i + 1 < len(positions) else len(content)
-            )
+            next_pos = positions[i + 1][0] if i + 1 < len(positions) else len(content)
             section_text = content[pos + len(heading) : next_pos].strip()
             if section_text:
                 sections.append((heading, section_text))
