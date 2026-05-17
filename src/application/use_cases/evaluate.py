@@ -48,7 +48,7 @@ _log = structlog.get_logger(__name__)
 
 
 def default_agent_runner(
-    graph: CompiledStateGraph,
+    graph: CompiledStateGraph,  # type: ignore[type-arg]
 ) -> Callable[[str, str | None], Awaitable[AnswerWithCitations]]:
     """Build an ``agent_runner`` callable that wraps a compiled LangGraph.
 

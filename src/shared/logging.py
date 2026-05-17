@@ -71,7 +71,7 @@ def configure_logging(level: str = "INFO") -> None:
 
 def get_logger(name: str) -> structlog.stdlib.BoundLogger:
     """Return a bound structlog logger for the given module name."""
-    return structlog.get_logger(name)  # type: ignore[no-any-return] — structlog.get_logger returns BoundLogger, mypy infers Any
+    return structlog.get_logger(name)  # type: ignore[no-any-return]
 
 
 def bind_context(*, trace_id: str = "", session_id: str = "") -> None:

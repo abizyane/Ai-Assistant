@@ -1,8 +1,12 @@
-"""Answer DTOs returned by the generate-answer use case."""
+"""Answer entities and DTOs — domain answers and use-case output shapes."""
 
 from __future__ import annotations
 
+import uuid
+
 from pydantic import BaseModel, ConfigDict, Field
+
+from src.domain.entities.citation import Citation
 
 
 class AnswerCitation(BaseModel):
@@ -36,3 +40,18 @@ class AnswerWithCitations(BaseModel):
     language: str = Field(min_length=2, description="BCP-47 language code")
     tokens_in: int = Field(ge=0, description="Input tokens consumed by the LLM")
     tokens_out: int = Field(ge=0, description="Output tokens produced by the LLM")
+
+
+class Answer(BaseModel):
+    """Domain entity representing an answer produced for a user query."""
+
+    model_config = ConfigDict(frozen=True)
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4)
+    query_id: uuid.UUID = Field(description="ID of the query this answers")
+    text: str = Field(min_length=1, description="Generated answer text")
+    confidence: float = Field(ge=0.0, le=1.0, description="Answer confidence score 0-1")
+    citations: list[Citation] = Field(
+        default_factory=list,
+        description="Source citations grounding the answer",
+    )

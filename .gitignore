@@ -49,3 +49,7 @@ Thumbs.db
 
 # Orchestrator state (do not commit)
 .sisyphus/
+
+# Temp files
+errors.txt
+.dmypy.json

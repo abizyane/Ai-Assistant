@@ -320,7 +320,7 @@ class PGVectorStore:
         async with self._session_factory() as session:
             result = await session.execute(stmt)
             await session.commit()
-        return result.rowcount or 0
+        return result.rowcount or 0  # type: ignore[attr-defined]
 
     async def delete(self, chunk_ids: list[UUID]) -> None:
         """Delete specific chunks by ID.

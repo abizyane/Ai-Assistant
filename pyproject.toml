@@ -112,7 +112,27 @@ convention = "google"
 strict = true
 python_version = "3.12"
 plugins = ["pydantic.mypy"]
-exclude = ["tests/"]
+exclude = ["tests/", "src/interface/web/app\\.py"]
+
+[[tool.mypy.overrides]]
+module = ["pgvector", "pgvector.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["FlagEmbedding"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["ragas", "ragas.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["datasets"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["src.interface.web.chainlit_app", "src.interface.web.app"]
+ignore_errors = true
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

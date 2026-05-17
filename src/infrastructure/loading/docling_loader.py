@@ -164,9 +164,9 @@ def _extract_headings(document: object) -> list[str]:
         Ordered list of heading strings, possibly empty.
     """
     try:
-        from docling_core.types.doc import SectionHeaderItem
+        from docling_core.types.doc import SectionHeaderItem  # type: ignore[attr-defined]
 
-        return [item.orig for item in document.texts if isinstance(item, SectionHeaderItem)]
+        return [item.orig for item in document.texts if isinstance(item, SectionHeaderItem)]  # type: ignore[attr-defined]
     except Exception:
         return []
 
@@ -181,7 +181,7 @@ def _result_to_raw_document(result: object, file_path: Path) -> RawDocument:
     Returns:
         A populated :class:`~src.domain.ports.dto.RawDocument`.
     """
-    doc = result.document
+    doc = result.document  # type: ignore[attr-defined]
     text = doc.export_to_markdown()
     content_hash = hashlib.sha256(text.encode()).hexdigest()
 

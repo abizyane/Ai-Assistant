@@ -89,7 +89,7 @@ def track_latency(metric_name: str, labels: dict[str, str] | None = None) -> Cal
             finally:
                 observe_histogram(metric_name, time.perf_counter() - start, labels)
 
-        return wrapper  # type: ignore[return-value] — wrapper preserves callable signature via functools.wraps
+        return wrapper  # type: ignore[return-value]
 
     return decorator
 

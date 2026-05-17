@@ -109,7 +109,7 @@ def traced(span_name: str, **default_attrs: Any) -> Callable[[_F], _F]:  # noqa:
                         span.set_status(Status(StatusCode.ERROR))
                         raise
 
-            return _asyncgen_wrapper  # type: ignore[return-value] — wrapper preserves callable signature via functools.wraps
+            return _asyncgen_wrapper  # type: ignore[return-value]
 
         if asyncio.iscoroutinefunction(func):
 
@@ -133,7 +133,7 @@ def traced(span_name: str, **default_attrs: Any) -> Callable[[_F], _F]:  # noqa:
                         span.set_status(Status(StatusCode.ERROR))
                         raise
 
-            return _async_wrapper  # type: ignore[return-value] — wrapper preserves callable signature via functools.wraps
+            return _async_wrapper  # type: ignore[return-value]
 
         # Non-async: return unchanged (no-op wrapping)
         return func

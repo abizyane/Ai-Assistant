@@ -69,7 +69,7 @@ class RAGAPIClient:
         async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.get(f"{self._base_url}/health")
             response.raise_for_status()
-            return response.json()  # type: ignore[no-any-return] — httpx Response.json() typed as Any upstream
+            return response.json()  # type: ignore[no-any-return]
 
     async def chat_sync(
         self,
@@ -98,7 +98,7 @@ class RAGAPIClient:
         async with httpx.AsyncClient(timeout=120.0) as client:
             response = await client.post(f"{self._base_url}/chat/sync", json=payload)
             response.raise_for_status()
-            return response.json()  # type: ignore[no-any-return] — httpx Response.json() typed as Any upstream
+            return response.json()  # type: ignore[no-any-return]
 
     async def chat_stream_async(
         self,
@@ -221,7 +221,7 @@ class RAGAPIClient:
         async with httpx.AsyncClient(timeout=120.0) as client:
             response = await client.post(f"{self._base_url}/ingest", json=payload)
             response.raise_for_status()
-            return response.json()  # type: ignore[no-any-return] — httpx Response.json() typed as Any upstream
+            return response.json()  # type: ignore[no-any-return]
 
     async def get_session(self, session_id: str) -> dict[str, Any]:
         """GET /sessions/{session_id} → session history dict.
@@ -238,4 +238,4 @@ class RAGAPIClient:
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.get(f"{self._base_url}/sessions/{session_id}")
             response.raise_for_status()
-            return response.json()  # type: ignore[no-any-return] — httpx Response.json() typed as Any upstream
+            return response.json()  # type: ignore[no-any-return]

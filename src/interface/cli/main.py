@@ -109,16 +109,16 @@ def ingest(
 
     console.print(
         make_ingest_summary_table(
-            files_processed=report.files_processed,  # type: ignore[union-attr] — guaranteed non-None after successful async execution
-            files_skipped=report.files_skipped,  # type: ignore[union-attr] — guaranteed non-None after successful async execution
-            chunks_created=report.chunks_created,  # type: ignore[union-attr] — guaranteed non-None after successful async execution
-            duration_seconds=report.duration_seconds,  # type: ignore[union-attr] — guaranteed non-None after successful async execution
-            errors=report.errors,  # type: ignore[union-attr] — guaranteed non-None after successful async execution
+            files_processed=report.files_processed,  # type: ignore[attr-defined]
+            files_skipped=report.files_skipped,  # type: ignore[attr-defined]
+            chunks_created=report.chunks_created,  # type: ignore[attr-defined]
+            duration_seconds=report.duration_seconds,  # type: ignore[attr-defined]
+            errors=report.errors,  # type: ignore[attr-defined]
         )
     )
 
-    if report.errors:  # type: ignore[union-attr] — guaranteed non-None after successful async execution
-        for file_path, err_msg in report.errors:  # type: ignore[union-attr] — guaranteed non-None after successful async execution
+    if report.errors:  # type: ignore[attr-defined]
+        for file_path, err_msg in report.errors:  # type: ignore[attr-defined]
             render_error(f"{file_path}: {err_msg}")
         raise typer.Exit(code=1)
 
@@ -150,7 +150,7 @@ def chat(
     agent = build_agent(settings)
 
     async def _ask(question: str) -> None:
-        state: dict = await agent.ainvoke(  # type: ignore[type-arg] — async closure cannot express full state schema inline
+        state: dict = await agent.ainvoke(  # type: ignore[type-arg]
             {"query": question, "session_id": session_id}
         )
         answer = state.get("final_answer")
@@ -214,16 +214,16 @@ def evaluate(
         "context_recall": settings.eval.context_recall,
         "answer_correctness": settings.eval.answer_correctness,
     }
-    console.print(make_eval_table(report.aggregate, thresholds))  # type: ignore[union-attr] — guaranteed non-None after successful async execution
+    console.print(make_eval_table(report.aggregate, thresholds))  # type: ignore[attr-defined]
 
-    failures = check_thresholds(report, settings)  # type: ignore[arg-type] — report is EvalResult, check_thresholds accepts EvalResult | dict
+    failures = check_thresholds(report, settings)  # type: ignore[arg-type]
     if failures:
-        for metric, score, threshold in failures:
+        for metric, score, threshold in failures:  # type: ignore[misc]
             render_error(f"{metric}: {score:.4f} < threshold {threshold:.4f}")
         raise typer.Exit(code=1)
 
     render_success(
-        f"All thresholds passed ({report.sample_size} rows evaluated)."  # type: ignore[union-attr] — guaranteed non-None after successful async execution
+        f"All thresholds passed ({report.sample_size} rows evaluated)."
     )
 
 
@@ -272,7 +272,7 @@ def sessions_list(
     """
     repo = build_session_repo()
 
-    async def _list_run() -> list:  # type: ignore[type-arg] — async closure cannot express full state schema inline
+    async def _list_run() -> list:  # type: ignore[type-arg]
         return await repo.list_sessions(user_id=user_id)
 
     sessions = asyncio.run(_list_run())
@@ -291,7 +291,7 @@ def sessions_show(
     """Show the message history for a session by [cyan]SESSION_ID[/cyan]."""
     repo = build_session_repo()
 
-    async def _show_run() -> list:  # type: ignore[type-arg] — async closure cannot express full state schema inline
+    async def _show_run() -> list:  # type: ignore[type-arg]
         return await repo.get_history(session_id)
 
     messages = asyncio.run(_show_run())
@@ -328,4 +328,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    sys.exit(main())  # type: ignore[arg-type] — main() returns None, sys.exit accepts None | int
+    sys.exit(main())  # type: ignore[func-returns-value]

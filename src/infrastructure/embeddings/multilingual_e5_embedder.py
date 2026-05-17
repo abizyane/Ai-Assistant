@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import threading
 import time
-from typing import Any
+from typing import Any, cast
 
 import structlog
 
@@ -64,7 +64,7 @@ class MultilingualE5Embedder:
                 batch_size=batch_size,
                 convert_to_numpy=True,
             )
-        return raw.tolist()
+        return cast(list[list[float]], raw.tolist())
 
     @traced("embedder.embed_texts")
     async def embed_texts(self, texts: list[str]) -> list[list[float]]:

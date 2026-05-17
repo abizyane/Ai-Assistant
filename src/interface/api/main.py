@@ -105,7 +105,7 @@ async def _global_exception_handler(request: Request, exc: Exception) -> JSONRes
 
 
 @app.post("/chat")
-async def chat_sse(body: ChatRequest, agent: AgentDep) -> StreamingResponse:
+async def chat_sse(body: ChatRequest, agent: AgentDep) -> StreamingResponse:  # type: ignore[type-arg]
     """Stream chat response as Server-Sent Events."""
     state: dict[str, Any] = {
         "query": body.query,
@@ -152,7 +152,7 @@ async def chat_sse(body: ChatRequest, agent: AgentDep) -> StreamingResponse:
 
 
 @app.post("/chat/sync", response_model=SyncChatResponse)
-async def chat_sync(body: ChatRequest, agent: AgentDep) -> SyncChatResponse:
+async def chat_sync(body: ChatRequest, agent: AgentDep) -> SyncChatResponse:  # type: ignore[type-arg]
     """Return the full answer as a single JSON response."""
     state: dict[str, Any] = {
         "query": body.query,

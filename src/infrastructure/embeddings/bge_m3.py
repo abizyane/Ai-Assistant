@@ -45,7 +45,7 @@ class BGEM3Embedder:
         with self._lock:
             if self._model is not None:
                 return
-            from FlagEmbedding import BGEM3FlagModel  # type: ignore[import-untyped]
+            from FlagEmbedding import BGEM3FlagModel
 
             model_id = self._settings.embedding.model
             cache_dir = self._settings.embedding.cache_dir

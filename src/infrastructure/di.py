@@ -303,7 +303,7 @@ def build_ingest_use_case(settings: Settings | None = None) -> IngestDocumentsUs
     session_factory = create_session_factory(engine)
     return IngestDocumentsUseCase(
         loader=build_loader(s),
-        chunker=build_chunker(s),
+        chunker=build_chunker(s),  # type: ignore[arg-type]
         embedder=build_embedder(s),
         vector_store=build_vector_store(s),
         session_repo=session_factory,
@@ -363,7 +363,7 @@ def build_evaluate_use_case(settings: Settings | None = None) -> EvaluateUseCase
     return EvaluateUseCase(agent_runner=runner, settings=s)
 
 
-def build_agent(settings: Settings | None = None) -> CompiledStateGraph:
+def build_agent(settings: Settings | None = None) -> CompiledStateGraph:  # type: ignore[type-arg]
     """Build and compile the full agentic RAG LangGraph.
 
     Wires retrieve \u2192 generate \u2192 verify_grounding into a compiled

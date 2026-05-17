@@ -29,7 +29,7 @@ class LangfuseTracer:
         self._client: Any = None
         if self._enabled:
             try:
-                from langfuse import Langfuse  # type: ignore[import-untyped]
+                from langfuse import Langfuse
 
                 self._client = Langfuse(
                     host=host,

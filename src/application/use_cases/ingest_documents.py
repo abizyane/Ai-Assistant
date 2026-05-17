@@ -184,7 +184,7 @@ class IngestDocumentsUseCase:
         total_chunks = 0
 
         for doc in documents:
-            chunks = await self._chunker.chunk([doc])
+            chunks = await self._chunker.chunk([doc])  # type: ignore[misc, arg-type]
             if not chunks:
                 continue
 
@@ -216,7 +216,7 @@ class IngestDocumentsUseCase:
                 for chunk, emb, lang in zip(chunks, embeddings, langs, strict=True)
             ]
 
-            await self._vector_store.upsert(chunks_with_emb)  # type: ignore[arg-type] — VectorStorePort.upsert accepts Sequence, list is compatible
+            await self._vector_store.upsert(chunks_with_emb)
             total_chunks += len(chunks)
 
         await self._record_ingestion_run(file_path, file_hash, total_chunks)

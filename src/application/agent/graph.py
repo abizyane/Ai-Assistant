@@ -158,7 +158,7 @@ def build_agent_graph(
     generate_uc: GenerateAnswerUseCase,
     grade_llm: LLMPort,
     settings: Settings,
-) -> CompiledStateGraph:
+) -> CompiledStateGraph:  # type: ignore[type-arg]
     """Build and compile the agentic RAG StateGraph.
 
     Wires retrieve \u2192 generate \u2192 verify_grounding into a compiled
@@ -175,17 +175,17 @@ def build_agent_graph(
     """
     max_retries = settings.agent.max_regen_attempts
 
-    sg: StateGraph = StateGraph(AgentState)
-    sg.add_node("retrieve", _make_retrieve_node(retrieve_uc))
-    sg.add_node("generate", _make_generate_node(generate_uc))
-    sg.add_node("verify_grounding", _make_verify_node(grade_llm))
+    sg: StateGraph = StateGraph(AgentState)  # type: ignore[type-arg]
+    sg.add_node("retrieve", _make_retrieve_node(retrieve_uc))  # type: ignore[call-overload]
+    sg.add_node("generate", _make_generate_node(generate_uc))  # type: ignore[call-overload]
+    sg.add_node("verify_grounding", _make_verify_node(grade_llm))  # type: ignore[call-overload]
 
     sg.set_entry_point("retrieve")
     sg.add_edge("retrieve", "generate")
     sg.add_edge("generate", "verify_grounding")
     sg.add_conditional_edges(
         "verify_grounding",
-        _make_route_after_verify(max_retries),
+        _make_route_after_verify(max_retries),  # type: ignore[arg-type]
         {"generate": "generate", END: END},
     )
 

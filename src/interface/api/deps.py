@@ -37,7 +37,7 @@ def get_settings() -> Settings:
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 
 
-def get_agent(settings: SettingsDep) -> CompiledStateGraph:
+def get_agent(settings: SettingsDep) -> CompiledStateGraph:  # type: ignore[type-arg]
     """Build and return the compiled agentic RAG graph."""
     return di.build_agent(settings)
 
