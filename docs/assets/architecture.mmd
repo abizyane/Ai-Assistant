@@ -1,0 +1,69 @@
+flowchart TD
+    subgraph Interfaces
+        CLI[Typer CLI]
+        API[FastAPI REST]
+        UI[Streamlit Web UI]
+    end
+
+    subgraph DI[DI Container]
+        CONT[Composition Root]
+    end
+
+    subgraph Agent[LangGraph Agent]
+        RW[rewrite]
+        RT[retrieve]
+        GR[grade]
+        GN[generate]
+        VF[verify]
+        RW --> RT --> GR --> GN --> VF
+        GR -- low grade --> RT
+    end
+
+    subgraph UseCases[Use Cases]
+        UC_I[Ingest]
+        UC_A[Answer]
+        UC_E[Evaluate]
+    end
+
+    subgraph Ports[Ports]
+        P_LLM[LLMPort]
+        P_EMB[EmbeddingPort]
+        P_VS[VectorStorePort]
+        P_SR[SessionRepoPort]
+        P_TR[TracerPort]
+        P_MT[MetricsPort]
+    end
+
+    subgraph Adapters[Adapters]
+        A_GEM[GeminiLLM]
+        A_OAI[OpenAILLM]
+        A_BGE[BGEM3Embedding]
+        A_RNK[BGEReranker]
+        A_PGV[PGVectorStore]
+        A_SES[SessionRepository]
+        A_LF[LangfuseTracer]
+        A_PR[PrometheusMetrics]
+    end
+
+    CLI --> CONT
+    API --> CONT
+    UI --> CONT
+    CONT --> UC_I
+    CONT --> UC_A
+    CONT --> UC_E
+    UC_A --> Agent
+    UC_I --> P_EMB
+    UC_I --> P_VS
+    Agent --> P_LLM
+    Agent --> P_EMB
+    Agent --> P_VS
+    Agent --> P_TR
+    Agent --> P_MT
+    UC_A --> P_SR
+    P_LLM --> A_GEM
+    P_LLM --> A_OAI
+    P_EMB --> A_BGE
+    P_VS --> A_PGV
+    P_SR --> A_SES
+    P_TR --> A_LF
+    P_MT --> A_PR
