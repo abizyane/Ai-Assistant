@@ -1,0 +1,120 @@
+# =============================================================================
+# RAG SLO Alert Rules
+# =============================================================================
+# Metric name adaptations (spec → instrumented):
+#   rag_requests_total           → http_request_duration_seconds_count
+#                                  (status label is the string HTTP code, e.g. "500")
+#   rag_retrieval_duration_seconds → vector_search_duration_seconds
+#   rag_llm_retries_total        → NOT instrumented; alert uses p95 LLM call
+#                                  latency as a proxy (BaseLLM/tenacity retry storms
+#                                  manifest as sustained high latency)
+#   rag_llm_requests_total       → llm_request_duration_seconds_count
+#   rag_eval_faithfulness        → rag_eval_faithfulness  ✓ exact match
+# =============================================================================
+
+groups:
+  - name: rag_slos
+    rules:
+
+      # -----------------------------------------------------------------------
+      # HTTP 5xx error rate > 5% for 5 minutes
+      # Spec: sum(rate(rag_requests_total{status=~"5.."}[5m])) /
+      #       sum(rate(rag_requests_total[5m])) > 0.05
+      # Adapted: http_request_duration_seconds_count carries the same
+      #          {method, path, status} labels; status values are string HTTP codes.
+      # -----------------------------------------------------------------------
+      - alert: HighErrorRate
+        expr: >
+          sum(rate(http_request_duration_seconds_count{status=~"5.."}[5m]))
+          /
+          sum(rate(http_request_duration_seconds_count[5m]))
+          > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High HTTP 5xx error rate ({{ $value | humanizePercentage }})"
+          description: >
+            HTTP 5xx error rate is {{ $value | humanizePercentage }} over the last 5 minutes.
+            Current threshold: 5%. Investigate application logs for root cause.
+
+      # -----------------------------------------------------------------------
+      # Vector retrieval p95 latency > 2 s for 5 minutes
+      # Spec: histogram_quantile(0.95, sum(rate(rag_retrieval_duration_seconds_bucket[5m])) by (le)) > 2
+      # Adapted: vector_search_duration_seconds is the actual retrieval histogram
+      #          (labels: search_type="dense"|"hybrid")
+      # -----------------------------------------------------------------------
+      - alert: SlowRetrieval
+        expr: >
+          histogram_quantile(0.95,
+            sum(rate(vector_search_duration_seconds_bucket[5m])) by (le)
+          ) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Vector search p95 latency exceeds 2s (current: {{ $value }}s)"
+          description: >
+            p95 vector retrieval latency is {{ $value }}s over the last 5 minutes.
+            Check pgvector HNSW index health, connection pool saturation, and
+            query complexity. Threshold: 2s.
+
+      # -----------------------------------------------------------------------
+      # Langfuse scrape target down for 2 minutes
+      # NOTE: requires a Prometheus scrape job named "langfuse" (see prometheus.yml).
+      # Without that job the alert is dormant but syntactically valid.
+      # -----------------------------------------------------------------------
+      - alert: LangfuseDown
+        expr: up{job="langfuse"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Langfuse is unreachable (instance {{ $labels.instance }})"
+          description: >
+            Langfuse job={{ $labels.job }} instance={{ $labels.instance }} has been
+            unreachable for 2 minutes. Tracing and evaluation data may be lost.
+            Check the Langfuse container and its database health.
+
+      # -----------------------------------------------------------------------
+      # Ragas faithfulness score below 0.85 for 5 minutes
+      # rag_eval_faithfulness is a Gauge set via set_gauge() in evaluate.py
+      # -----------------------------------------------------------------------
+      - alert: EvalFaithfulnessDrop
+        expr: rag_eval_faithfulness < 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "RAG faithfulness score below 0.85 (current: {{ $value }})"
+          description: >
+            Ragas faithfulness score is {{ $value }} (SLO threshold: 0.85).
+            This may indicate degraded retrieval quality, chunk overlap issues,
+            or LLM hallucination. Review the latest evaluation run.
+
+      # -----------------------------------------------------------------------
+      # LLM retry storm proxy — p95 call latency > 15 s for 10 minutes
+      # Spec ratio: sum(rate(rag_llm_retries_total[10m])) /
+      #             sum(rate(rag_llm_requests_total[10m])) > 0.2
+      # rag_llm_retries_total is NOT yet instrumented; BaseLLM uses tenacity
+      # internally but emits no retry counter. Sustained high p95 LLM latency
+      # (> 15s) is a reliable proxy: when tenacity retries on 429/5xx, each
+      # call blocks for exponential-backoff intervals before eventually failing.
+      # TODO: instrument rag_llm_retries_total in BaseLLM._generate_with_retry
+      #       and replace with the exact ratio formula.
+      # -----------------------------------------------------------------------
+      - alert: LLMRetryStorm
+        expr: >
+          histogram_quantile(0.95,
+            sum(rate(llm_request_duration_seconds_bucket[10m])) by (le)
+          ) > 15
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Suspected LLM retry storm — p95 latency {{ $value }}s"
+          description: >
+            LLM p95 call duration is {{ $value }}s over the last 10 minutes.
+            This strongly suggests tenacity is retrying on 429 / 5xx errors.
+            Check provider quota, API key validity, and upstream LLM health.
+            Instrument rag_llm_retries_total for an exact retry ratio alert.

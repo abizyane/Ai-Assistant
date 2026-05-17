@@ -1,0 +1,72 @@
+# =============================================================================
+# LLM Cost Table (USD per 1,000,000 tokens — static pricing as of 2026-05)
+# =============================================================================
+# Model                    Input ($)   Output ($)
+# gemini-2.0-flash-exp      0.10        0.40
+# gpt-4o-mini               0.15        0.60
+#
+# IMPORTANT — metric adaptation notes:
+#   rag_llm_tokens_total{provider,model,type=input|output}
+#     → NOT yet instrumented. generation_tokens_total{kind=input|output} is the
+#       closest available metric but counts LLM *calls* (1 per request), not
+#       individual tokens. The cost rules below therefore produce "cost units per
+#       minute" proportional to call-rate — they become accurate token-based cost
+#       once rag_llm_tokens_total is instrumented and substituted here.
+#
+#   rag_request_duration_seconds / endpoint label
+#     → http_request_duration_seconds / path label
+#       (label name changed: 'endpoint' → 'path' per RequestLoggingMiddleware)
+# =============================================================================
+
+groups:
+  - name: rag_recording
+    rules:
+
+      # -----------------------------------------------------------------------
+      # p95 HTTP request latency by endpoint path
+      # Spec: histogram_quantile(0.95, sum(rate(rag_request_duration_seconds_bucket[5m])) by (le, endpoint))
+      # Adapted: http_request_duration_seconds / path label
+      # -----------------------------------------------------------------------
+      - record: rag:request_p95:latency_seconds
+        expr: >
+          histogram_quantile(0.95,
+            sum(rate(http_request_duration_seconds_bucket[5m])) by (le, path)
+          )
+
+      # -----------------------------------------------------------------------
+      # LLM call-rate proxy per minute (broken down by kind=input|output)
+      # Spec: sum(rate(rag_llm_tokens_total[1m])) by (provider, model) * 60
+      # Adapted: generation_tokens_total{kind} — provider/model labels not
+      #          available on this metric; kind maps to spec's type label.
+      # -----------------------------------------------------------------------
+      - record: rag:llm_tokens_per_minute
+        expr: sum(rate(generation_tokens_total[1m])) by (kind) * 60
+
+      # -----------------------------------------------------------------------
+      # Estimated LLM cost per minute — gemini-2.0-flash-exp
+      # Spec pattern:
+      #   sum(rate(rag_llm_tokens_total{provider="gemini",model="gemini-2.0-flash",type="input"}[1m]))
+      #     * 60 * 0.10 / 1000000
+      #   + sum(rate(rag_llm_tokens_total{...,type="output"}[1m])) * 60 * 0.40 / 1000000
+      # Adapted: generation_tokens_total{kind} replaces rag_llm_tokens_total{type}.
+      #          Labels provider + model are pinned via the labels: block to
+      #          produce correctly-labelled time series for the cost dashboard.
+      # -----------------------------------------------------------------------
+      - record: rag:llm_cost_per_minute_usd
+        labels:
+          provider: gemini
+          model: gemini-2.0-flash-exp
+        expr: >
+          sum(rate(generation_tokens_total{kind="input"}[1m]))  * 60 * 0.10 / 1000000
+          + sum(rate(generation_tokens_total{kind="output"}[1m])) * 60 * 0.40 / 1000000
+
+      # -----------------------------------------------------------------------
+      # Estimated LLM cost per minute — gpt-4o-mini
+      # -----------------------------------------------------------------------
+      - record: rag:llm_cost_per_minute_usd
+        labels:
+          provider: openai
+          model: gpt-4o-mini
+        expr: >
+          sum(rate(generation_tokens_total{kind="input"}[1m]))  * 60 * 0.15 / 1000000
+          + sum(rate(generation_tokens_total{kind="output"}[1m])) * 60 * 0.60 / 1000000

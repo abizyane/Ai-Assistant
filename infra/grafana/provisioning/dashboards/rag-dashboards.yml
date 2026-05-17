@@ -1,0 +1,22 @@
+apiVersion: 1
+
+# Dashboard provider for RAG-specific dashboards stored in infra/grafana/dashboards/.
+# These JSON files are provisioned from /etc/grafana/dashboards inside the container.
+#
+# REQUIRED docker-compose.yml volume mount (add to grafana service):
+#   - ./infra/grafana/dashboards:/etc/grafana/dashboards:ro
+#
+# The existing 'default' provider in dashboards.yml covers
+# /etc/grafana/provisioning/dashboards; this file adds a second provider
+# for the canonical dashboard directory that separates dashboard JSON files
+# from the provisioning configuration layer.
+
+providers:
+  - name: 'rag-dashboards'
+    orgId: 1
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /etc/grafana/dashboards
+      foldersFromFilesStructure: false

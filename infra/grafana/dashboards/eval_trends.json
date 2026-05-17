@@ -1,0 +1,339 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "RAG quality evaluation trend tracking using Ragas metrics: faithfulness, answer relevancy, context precision, context recall, and answer correctness. Gauges are updated each time the EvaluateUseCase runs against the golden JSONL dataset.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "RAG Service Logs (Loki)",
+      "tooltip": "Explore Loki logs for {service=\"rag\"} correlated with this time range",
+      "type": "link",
+      "url": "/explore?orgId=1&left=%7B%22datasource%22%3A%22Loki%22%2C%22queries%22%3A%5B%7B%22refId%22%3A%22A%22%2C%22expr%22%3A%22%7Bservice%3D%5C%22rag%5C%22%7D%22%7D%5D%7D"
+    }
+  ],
+  "panels": [
+    {
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "description": "Overlay of all five Ragas evaluation metrics on a single chart. Useful for spotting correlated regressions (e.g., a knowledge-base update that improves faithfulness but hurts relevancy). All scores are in [0, 1]; higher is better. SLO targets: faithfulness ≥ 0.85, answer_relevancy ≥ 0.80, context_precision ≥ 0.75, context_recall ≥ 0.75, answer_correctness ≥ 0.75.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "spanNulls": true
+          },
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 0.6 },
+              { "color": "green", "value": 0.8 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "expr": "rag_eval_faithfulness",
+          "refId": "A",
+          "legendFormat": "Faithfulness"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "expr": "rag_eval_answer_relevancy",
+          "refId": "B",
+          "legendFormat": "Answer Relevancy"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "expr": "rag_eval_context_precision",
+          "refId": "C",
+          "legendFormat": "Context Precision"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "expr": "rag_eval_context_recall",
+          "refId": "D",
+          "legendFormat": "Context Recall"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "expr": "rag_eval_answer_correctness",
+          "refId": "E",
+          "legendFormat": "Answer Correctness"
+        }
+      ],
+      "title": "All Eval Metrics — Trend Overview",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "description": "Ragas Faithfulness: fraction of answer claims that are grounded in the retrieved context. Score of 1.0 = every claim is supported. Score < 0.8 suggests the LLM is hallucinating or the retrieval quality is degrading. SLO: ≥ 0.85. Yellow: 0.6; Red: below 0.6.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 0.6 },
+              { "color": "green", "value": 0.8 }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 9 },
+      "id": 2,
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "expr": "rag_eval_faithfulness",
+          "refId": "A",
+          "legendFormat": "Faithfulness"
+        }
+      ],
+      "title": "Faithfulness",
+      "type": "gauge"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "description": "Ragas Answer Relevancy: semantic similarity between the generated answer and the original question. Score close to 1.0 = answer directly addresses the query. Low scores may indicate retrieval of irrelevant context or poor prompting. SLO: ≥ 0.80. Yellow: 0.6; Red: below 0.6.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 0.6 },
+              { "color": "green", "value": 0.8 }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 9 },
+      "id": 3,
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "expr": "rag_eval_answer_relevancy",
+          "refId": "A",
+          "legendFormat": "Answer Relevancy"
+        }
+      ],
+      "title": "Answer Relevancy",
+      "type": "gauge"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "description": "Ragas Context Precision: of the retrieved chunks, what fraction are actually relevant to the question (precision = relevant_retrieved / total_retrieved). Low scores mean the retriever is pulling in noisy or off-topic chunks. SLO: ≥ 0.75. Yellow: 0.55; Red: below 0.55.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 0.55 },
+              { "color": "green", "value": 0.75 }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 9 },
+      "id": 4,
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "expr": "rag_eval_context_precision",
+          "refId": "A",
+          "legendFormat": "Context Precision"
+        }
+      ],
+      "title": "Context Precision",
+      "type": "gauge"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "description": "Ragas Context Recall: fraction of ground-truth answer information that is covered by the retrieved context (recall = relevant_retrieved / total_relevant). Low scores indicate the retriever is missing key passages; consider increasing top-k or improving the embedding model. SLO: ≥ 0.75. Yellow: 0.55; Red: below 0.55.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 0.55 },
+              { "color": "green", "value": 0.75 }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 17 },
+      "id": 5,
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "expr": "rag_eval_context_recall",
+          "refId": "A",
+          "legendFormat": "Context Recall"
+        }
+      ],
+      "title": "Context Recall",
+      "type": "gauge"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "description": "Ragas Answer Correctness: weighted combination of factual overlap (F1) and semantic similarity between generated answer and ground truth. This is the most comprehensive end-to-end quality metric. SLO: ≥ 0.75. Yellow: 0.55; Red: below 0.55.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 0.55 },
+              { "color": "green", "value": 0.75 }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 17 },
+      "id": 6,
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "expr": "rag_eval_answer_correctness",
+          "refId": "A",
+          "legendFormat": "Answer Correctness"
+        }
+      ],
+      "title": "Answer Correctness",
+      "type": "gauge"
+    }
+  ],
+  "refresh": "5m",
+  "schemaVersion": 39,
+  "tags": ["rag"],
+  "templating": {
+    "list": []
+  },
+  "time": { "from": "now-7d", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Eval Trends",
+  "uid": "eval-trends",
+  "version": 1
+}

@@ -1,0 +1,265 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "LLM usage cost tracking: token consumption by kind (input/output), request throughput by provider and model, retry rate, and estimated hourly spend based on per-token pricing assumptions.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "RAG Service Logs (Loki)",
+      "tooltip": "Explore Loki logs for {service=\"rag\"} correlated with this time range",
+      "type": "link",
+      "url": "/explore?orgId=1&left=%7B%22datasource%22%3A%22Loki%22%2C%22queries%22%3A%5B%7B%22refId%22%3A%22A%22%2C%22expr%22%3A%22%7Bservice%3D%5C%22rag%5C%22%7D%22%7D%5D%7D"
+    }
+  ],
+  "panels": [
+    {
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "description": "Rate of generation completions per second, split by token kind (input vs output). Note: `generation_tokens_total` is a request counter incremented once per completion (not per individual token). Use alongside `llm_request_duration_seconds_count` for request-level analysis.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          },
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 20 },
+              { "color": "red", "value": 50 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "id": 1,
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "expr": "rate(generation_tokens_total{kind=\"input\"}[5m])",
+          "refId": "A",
+          "legendFormat": "Input completions/s"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "expr": "rate(generation_tokens_total{kind=\"output\"}[5m])",
+          "refId": "B",
+          "legendFormat": "Output completions/s"
+        }
+      ],
+      "title": "Generation Completions by Token Kind",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "description": "LLM API request rate per second, broken down by provider and model. Uses `llm_request_duration_seconds_count` histogram counter. Helps identify which model/provider combination drives the most load and cost.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          },
+          "unit": "reqps",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 10 },
+              { "color": "red", "value": 30 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "id": 2,
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "expr": "rate(llm_request_duration_seconds_count[5m])",
+          "refId": "A",
+          "legendFormat": "LLM Requests/s (all)"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "expr": "sum(rate(llm_request_duration_seconds_count[5m])) by (provider, model)",
+          "refId": "B",
+          "legendFormat": "{{provider}} / {{model}}"
+        }
+      ],
+      "title": "LLM Request Count by Provider / Model",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "description": "Proxy for LLM retry rate: difference between total LLM API calls (`llm_request_duration_seconds_count`) and successful completions that produced input tokens (`generation_tokens_total{kind=\"input\"}`). Positive values indicate retried or failed calls (tenacity backoff retries). Yellow: >0.5 retry/s; Red: >2/s.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          },
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.5 },
+              { "color": "red", "value": 2 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 8 },
+      "id": 3,
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "expr": "clamp_min(rate(llm_request_duration_seconds_count[5m]) - rate(generation_tokens_total{kind=\"input\"}[5m]), 0)",
+          "refId": "A",
+          "legendFormat": "Retry / Error Rate Proxy (calls/s without token output)"
+        }
+      ],
+      "title": "LLM Retry Rate (Proxy)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "description": "Estimated hourly LLM cost in USD based on per-token pricing assumptions. Formula: input_completions * $0.000005 (≈ Gemini flash input rate) + output_completions * $0.000015. IMPORTANT: `generation_tokens_total` counts completions, NOT individual tokens. Multiply by average token count (~1000 input / ~500 output) for more accurate estimates. Update pricing multipliers to match your actual provider contract.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "unit": "currencyUSD",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 5 },
+              { "color": "red", "value": 20 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 8 },
+      "id": 4,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "expr": "(sum(rate(generation_tokens_total{kind=\"input\"}[1h])) * 1000 * 0.000005) + (sum(rate(generation_tokens_total{kind=\"output\"}[1h])) * 500 * 0.000015)",
+          "refId": "A",
+          "legendFormat": "Est. Cost/hour (USD)"
+        }
+      ],
+      "title": "Estimated LLM Cost per Hour",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "description": "Ratio of output completions to input completions over a 5-minute window. A healthy RAG system produces roughly 1:1 (every input query yields an output answer). A ratio < 1 indicates unanswered queries (refusals, errors, or context-empty branches).",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          },
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1.2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 0.8 },
+              { "color": "green", "value": 0.95 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 8 },
+      "id": 5,
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "expr": "rate(generation_tokens_total{kind=\"output\"}[5m]) / clamp_min(rate(generation_tokens_total{kind=\"input\"}[5m]), 0.001)",
+          "refId": "A",
+          "legendFormat": "Output / Input Ratio"
+        }
+      ],
+      "title": "Token Output / Input Ratio",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["rag"],
+  "templating": {
+    "list": []
+  },
+  "time": { "from": "now-1h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "LLM Costs",
+  "uid": "llm-costs",
+  "version": 1
+}
