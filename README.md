@@ -18,7 +18,7 @@
 - Agentic RAG with LangGraph: retrieve → rerank → answer with citations
 - Hybrid retrieval (dense BGE-M3 + sparse BM25, fused via Reciprocal Rank Fusion)
 - Multilingual: English, French, Arabic (auto-detected)
-- Three interfaces: CLI, FastAPI REST, Streamlit web
+- Three interfaces: CLI, FastAPI REST, Chainlit web
 - Pluggable LLM providers: Gemini and OpenAI behind a single port
 - Observability: Langfuse traces, Prometheus metrics, Grafana dashboards, Loki logs
 - Continuous evaluation with Ragas (faithfulness, answer relevancy, context precision/recall)
@@ -29,7 +29,7 @@
 The system follows hexagonal architecture: the `domain` layer holds pure business rules
 and abstract ports, the `application` layer orchestrates use cases (ingest, answer,
 evaluate), the `infrastructure` layer provides concrete adapters (Gemini, OpenAI,
-pgvector, BGE-M3, Langfuse, Prometheus), and the `interface` layer exposes CLI, REST,
+pgvector, multilingual-e5-small, Langfuse, Prometheus), and the `interface` layer exposes CLI, REST,
 and web entry points. Swapping an adapter (e.g., Gemini → OpenAI, pgvector → Qdrant)
 requires implementing one interface — the domain stays untouched.
 
@@ -50,7 +50,7 @@ After `make demo`:
 
 | Service       | URL                              |
 |---------------|----------------------------------|
-| Streamlit UI  | http://localhost:8501            |
+| Chainlit UI   | http://localhost:8502            |
 | FastAPI docs  | http://localhost:8000/docs       |
 | Langfuse      | http://localhost:3000            |
 | Grafana       | http://localhost:3001            |
@@ -63,7 +63,7 @@ After `make demo`:
 | `make demo`       | Spin up full stack, seed demo data, print URLs           |
 | `make up`         | Start the stack (detached, healthchecks)                 |
 | `make down`       | Stop containers (volumes preserved)                      |
-| `make fclean`     | Destroy containers, volumes, images, caches              |
+| `make fclean`     | Destroy everything: containers, volumes, images, caches, runtime data |
 | `make test`       | Run full test suite with coverage gate                   |
 | `make eval`       | Run Ragas evaluation; fail if thresholds breached        |
 | `make smoke`      | Run smoke test against live stack                        |
@@ -86,10 +86,10 @@ Run `make help` for the full list.
 │   ├── domain/           # Entities + ports (pure, no I/O)
 │   ├── application/      # Use cases + LangGraph agent
 │   ├── infrastructure/   # Adapters (LLM, embeddings, vector store, …)
-│   ├── interface/        # FastAPI, Typer CLI, Streamlit
+│   ├── interface/        # FastAPI, Typer CLI, Chainlit
 │   └── shared/           # Cross-cutting types, exceptions, utils
 ├── tests/                # unit, integration, e2e
-├── .streamlit/           # Streamlit theme
+├── docker-compose.yml
 ├── docker-compose.yml
 ├── Dockerfile
 ├── Makefile
@@ -99,11 +99,11 @@ Run `make help` for the full list.
 ## Tech stack
 
 - **LLMs**: Gemini 2.0 Flash (`langchain-google-genai`), OpenAI (`langchain-openai`)
-- **Retrieval**: BGE-M3 dense embeddings, BM25 sparse, BGE-reranker-v2-m3 cross-encoder
+- **Retrieval**: multilingual-e5-small dense embeddings (384-dim), BM25 sparse, BGE-reranker-v2-m3 cross-encoder
 - **Storage**: PostgreSQL + pgvector (HNSW index), Alembic migrations
 - **Agent**: LangGraph (explicit state machine)
 - **Observability**: Langfuse (traces), Prometheus (metrics), Grafana (dashboards), Loki (logs)
-- **Interfaces**: FastAPI + Uvicorn, Typer CLI, Streamlit
+- **Interfaces**: FastAPI + Uvicorn, Typer CLI, Chainlit
 - **Dev tooling**: uv, ruff, mypy strict, pytest, testcontainers, Ragas
 
 ## Documentation

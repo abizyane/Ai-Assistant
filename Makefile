@@ -68,9 +68,16 @@ help:  ## Show this help message
 # ─────────────────────────────────────────────────────────────────────────────
 # Stack lifecycle
 # ─────────────────────────────────────────────────────────────────────────────
-build:  ## Build all Docker images
+build:  ## Build images incrementally, start the stack, and apply migrations
 	@printf "$(C_GREEN)Building images…$(C_RESET)\n"
 	$(COMPOSE) build
+	@printf "$(C_GREEN)Starting stack…$(C_RESET)\n"
+	$(COMPOSE) up -d
+	@printf "$(C_YELLOW)Waiting for the database to be healthy…$(C_RESET)\n"
+	@until $(COMPOSE) exec db pg_isready -U $${POSTGRES_USER:-raguser} -q 2>/dev/null; do sleep 2; done
+	@printf "$(C_YELLOW)Applying database migrations…$(C_RESET)\n"
+	$(COMPOSE) exec app alembic upgrade head
+	@printf "$(C_GREEN)Setup complete — stack is ready.$(C_RESET)\n"
 
 up:  ## Start the full stack (detached, healthchecks)
 	@printf "$(C_GREEN)Starting stack…$(C_RESET)\n"
@@ -98,12 +105,15 @@ clean:  ## Remove build artifacts (keep containers + data)
 	find . -type f -name '*.pyc' -not -path './.venv/*' -delete 2>/dev/null || true
 	@printf "$(C_YELLOW)Done.$(C_RESET)\n"
 
-fclean:  ## Destroy EVERYTHING: containers, volumes, images, caches
-	@printf "$(C_RED)Full clean — destroying all docker artifacts and caches…$(C_RESET)\n"
-	$(COMPOSE) down -v --rmi local
+fclean:  ## Destroy EVERYTHING: containers, volumes, images, caches, runtime data
+	@printf "$(C_RED)Full clean — removing all docker resources and caches…$(C_RESET)\n"
+	$(COMPOSE) down -v --rmi all --remove-orphans 2>/dev/null || true
+	docker volume prune -f
+	docker image prune -f
 	rm -rf .pytest_cache .mypy_cache .ruff_cache htmlcov \
 	       dist/ build/ *.egg-info \
-	       .coverage coverage.xml evals/runs/*.json
+	       .coverage coverage.xml \
+	       evals/runs/ logs/ *.log
 	find . -type d -name '__pycache__' -not -path './.venv/*' -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name '*.pyc' -not -path './.venv/*' -delete 2>/dev/null || true
 	@printf "$(C_RED)Full clean complete.$(C_RESET)\n"
@@ -122,7 +132,7 @@ demo:  ## One-shot hiring-manager demo: spin up + seed + print URLs
 	$(PYTHON) scripts/seed_demo.py
 	@printf "\n$(C_CYAN)╔══════════════════════════════════════════════════════════╗$(C_RESET)\n"
 	@printf "$(C_CYAN)║  Demo ready — open any of these URLs:                   ║$(C_RESET)\n"
-	@printf "$(C_CYAN)║  Streamlit UI  →  http://localhost:8501                 ║$(C_RESET)\n"
+	@printf "$(C_CYAN)║  Chainlit UI   →  http://localhost:8502                 ║$(C_RESET)\n"
 	@printf "$(C_CYAN)║  FastAPI docs  →  http://localhost:8000/docs            ║$(C_RESET)\n"
 	@printf "$(C_CYAN)║  Langfuse      →  http://localhost:3000                 ║$(C_RESET)\n"
 	@printf "$(C_CYAN)║  Grafana       →  http://localhost:3001                 ║$(C_RESET)\n"
@@ -196,12 +206,12 @@ eval:  ## Run Ragas evaluation against golden set; fail if thresholds breached
 # ─────────────────────────────────────────────────────────────────────────────
 db-migrate:  ## Apply all pending Alembic migrations (upgrade head)
 	@printf "$(C_YELLOW)Applying migrations…$(C_RESET)\n"
-	alembic upgrade head
+	$(COMPOSE) exec app alembic upgrade head
 	@printf "$(C_GREEN)Migrations applied.$(C_RESET)\n"
 
 db-rollback:  ## Roll back one migration (downgrade -1)
 	@printf "$(C_RED)Rolling back last migration…$(C_RESET)\n"
-	alembic downgrade -1
+	$(COMPOSE) exec app alembic downgrade -1
 	@printf "$(C_RED)Rollback done.$(C_RESET)\n"
 
 db-revision:  ## Generate a new autogenerate migration (MSG="description" required)
