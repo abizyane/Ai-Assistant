@@ -31,7 +31,7 @@ from src.application.use_cases.retrieve import RetrieveUseCase
 from src.config.settings import Settings
 from src.domain.ports.llm import LLMPort
 from src.infrastructure.chunking.semantic_chunker import SemanticChunker
-from src.infrastructure.embeddings.bge_m3 import BGEM3Embedder
+from src.infrastructure.embeddings.multilingual_e5_embedder import MultilingualE5Embedder
 from src.infrastructure.llm.gemini import GeminiLLM
 from src.infrastructure.llm.openai import OpenAILLM
 from src.infrastructure.loading.docling_loader import DoclingLoader
@@ -113,14 +113,14 @@ def build_engine(settings: Settings | None = None) -> AsyncEngine:
 
 
 @lru_cache(maxsize=1)
-def _cached_embedder() -> BGEM3Embedder:
-    """Build and cache the BGE-M3 embedder (internal)."""
+def _cached_embedder() -> MultilingualE5Embedder:
+    """Build and cache the multilingual-e5-small embedder (internal)."""
     settings = build_settings()
-    return BGEM3Embedder(settings)
+    return MultilingualE5Embedder(settings)
 
 
-def build_embedder(settings: Settings | None = None) -> BGEM3Embedder:
-    """Return the singleton BGE-M3 dense embedder.
+def build_embedder(settings: Settings | None = None) -> MultilingualE5Embedder:
+    """Return the singleton multilingual-e5-small dense embedder.
 
     The model is loaded lazily on the first :meth:`embed_texts` call and then
     reused for the lifetime of the process.
@@ -130,7 +130,7 @@ def build_embedder(settings: Settings | None = None) -> BGEM3Embedder:
             internally.
 
     Returns:
-        Singleton ``BGEM3Embedder`` instance.
+        Singleton ``MultilingualE5Embedder`` instance.
     """
     del settings
     return _cached_embedder()

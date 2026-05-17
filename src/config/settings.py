@@ -38,7 +38,10 @@ class EmbeddingSettings(BaseSettings):
 
     model_config = SettingsConfigDict(env_prefix="RAG_EMBEDDING__", env_file=".env", extra="ignore")
 
-    model: str = Field(default="BAAI/bge-m3", description="HuggingFace embedding model ID")
+    model: str = Field(
+        default="intfloat/multilingual-e5-small",
+        description="HuggingFace embedding model ID",
+    )
     batch_size: int = Field(default=32, gt=0, description="Batch size for encoding")
     cache_dir: str = Field(default="/tmp/hf_cache", description="HuggingFace model cache directory")
 

@@ -44,7 +44,7 @@ class ChunkORM(Base):
     content: Mapped[str] = mapped_column(Text, nullable=False)
     position: Mapped[int] = mapped_column(Integer, nullable=False)
     token_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    embedding: Mapped[list[float]] = mapped_column(Vector(1024), nullable=True)
+    embedding: Mapped[list[float]] = mapped_column(Vector(384), nullable=True)
     document: Mapped[DocumentORM] = relationship("DocumentORM", back_populates="chunks")
 
     __table_args__ = (
