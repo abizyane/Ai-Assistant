@@ -115,3 +115,20 @@ async def test_stops_after_max_retries(
     assert generate_uc.execute.await_count <= settings.agent.max_regen_attempts + 1
     assert final.get("retry_count", 0) <= settings.agent.max_regen_attempts + 1
     assert final["final_answer"] is not None
+
+
+async def test_no_chunks_skips_generate(settings: Settings) -> None:
+    """When retrieval returns no chunks (all below reranker threshold),
+    the graph must return a graceful 'not found' answer without calling generate_uc."""
+    retrieve_uc_empty = MagicMock()
+    retrieve_uc_empty.execute = AsyncMock(return_value=[])
+    generate_uc = MagicMock()
+    generate_uc.execute = AsyncMock()
+    grade_llm = _llm_with([])
+
+    graph = build_agent_graph(retrieve_uc_empty, generate_uc, grade_llm, settings)
+    final: AgentState = await graph.ainvoke({"query": "Unknown topic", "language": "en"})
+
+    generate_uc.execute.assert_not_called()
+    assert final["grounded"] is True
+    assert "couldn't find" in (final["final_answer"].text or "").lower()

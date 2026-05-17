@@ -43,7 +43,8 @@ async def test_rerank_sort_order(reranker: BGEReranker) -> None:
     ]
     request = RerankRequest(query="test query", chunks=chunks, top_k=3)
     mock_model = MagicMock()
-    mock_model.compute_score.return_value = [0.1, 0.9, 0.5]
+    # All scores above the 0.3 threshold — only sort order is exercised here.
+    mock_model.compute_score.return_value = [0.4, 0.9, 0.6]
     reranker._model = mock_model
 
     result = await reranker.rerank(request)
@@ -53,8 +54,35 @@ async def test_rerank_sort_order(reranker: BGEReranker) -> None:
     assert result[1].content == "medium relevance"
     assert result[2].content == "low relevance"
     assert result[0].score == pytest.approx(0.9)
-    assert result[1].score == pytest.approx(0.5)
-    assert result[2].score == pytest.approx(0.1)
+    assert result[1].score == pytest.approx(0.6)
+
+
+async def test_rerank_score_threshold_filters_low_relevance(reranker: BGEReranker) -> None:
+    chunks = [_chunk("irrelevant doc"), _chunk("relevant doc")]
+    # Score 0.1 is below the default 0.3 threshold; 0.7 passes.
+    request = RerankRequest(query="query", chunks=chunks, top_k=5)
+    mock_model = MagicMock()
+    mock_model.compute_score.return_value = [0.1, 0.7]
+    reranker._model = mock_model
+
+    result = await reranker.rerank(request)
+
+    assert len(result) == 1
+    assert result[0].score == pytest.approx(0.7)
+    assert result[0].content == "relevant doc"
+
+
+async def test_rerank_all_below_threshold_returns_empty(reranker: BGEReranker) -> None:
+    chunks = [_chunk("a"), _chunk("b")]
+    request = RerankRequest(query="query", chunks=chunks, top_k=5)
+    mock_model = MagicMock()
+    mock_model.compute_score.return_value = [0.1, 0.2]
+    reranker._model = mock_model
+
+    result = await reranker.rerank(request)
+
+    assert result == []
+    assert result[2].score == pytest.approx(0.4)
 
 
 async def test_rerank_top_k_truncation(reranker: BGEReranker) -> None:
