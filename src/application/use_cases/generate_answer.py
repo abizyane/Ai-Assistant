@@ -6,8 +6,7 @@ import re
 from typing import Final
 
 from src.application.prompts import PromptTemplateLoader
-from src.domain.entities.answer import AnswerWithCitations
-from src.domain.entities.citation import Citation
+from src.domain.entities.answer import AnswerCitation, AnswerWithCitations
 from src.domain.entities.session import Message
 from src.domain.ports.dto import GenerationRequest, RetrievedChunk
 from src.domain.ports.llm import LLMPort
@@ -147,10 +146,10 @@ class GenerateAnswerUseCase:
     def _extract_grounded_citations(
         text: str,
         retrieved_chunks: list[RetrievedChunk],
-    ) -> list[Citation]:
+    ) -> list[AnswerCitation]:
         by_id = {str(c.chunk_id): c for c in retrieved_chunks}
         seen: set[str] = set()
-        citations: list[Citation] = []
+        citations: list[AnswerCitation] = []
         for match in _CITATION_MARKER_RE.finditer(text):
             chunk_id = match.group(1)
             if chunk_id in seen or chunk_id not in by_id:
@@ -159,7 +158,7 @@ class GenerateAnswerUseCase:
             chunk = by_id[chunk_id]
             page = chunk.metadata.get("page")
             citations.append(
-                Citation(
+                AnswerCitation(
                     chunk_id=chunk_id,
                     source=chunk.source_path,
                     page=int(page) if isinstance(page, int) else None,
