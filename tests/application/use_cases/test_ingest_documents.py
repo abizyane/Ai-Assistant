@@ -53,7 +53,7 @@ def loader() -> MagicMock:
 @pytest.fixture()
 def chunker() -> MagicMock:
     m = MagicMock()
-    m.chunk = MagicMock(return_value=[_make_chunk("First chunk"), _make_chunk("Second chunk", 1)])
+    m.chunk = AsyncMock(return_value=[_make_chunk("First chunk"), _make_chunk("Second chunk", 1)])
     return m
 
 

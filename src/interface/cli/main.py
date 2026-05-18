@@ -222,9 +222,7 @@ def evaluate(
             render_error(f"{metric}: {score:.4f} < threshold {threshold:.4f}")
         raise typer.Exit(code=1)
 
-    render_success(
-        f"All thresholds passed ({report.sample_size} rows evaluated)."
-    )
+    render_success(f"All thresholds passed ({report.sample_size} rows evaluated).")
 
 
 # ---------------------------------------------------------------------------

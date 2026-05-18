@@ -82,7 +82,6 @@ async def test_rerank_all_below_threshold_returns_empty(reranker: BGEReranker) -
     result = await reranker.rerank(request)
 
     assert result == []
-    assert result[2].score == pytest.approx(0.4)
 
 
 async def test_rerank_top_k_truncation(reranker: BGEReranker) -> None:

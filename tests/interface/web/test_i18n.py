@@ -47,6 +47,8 @@ _EXPECTED_KEYS = {
     "lang_en",
     "lang_fr",
     "lang_ar",
+    "citations_header",
+    "error_network",
 }
 
 

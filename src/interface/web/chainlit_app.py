@@ -106,6 +106,7 @@ async def on_chat_start() -> None:
     welcome_text: str = _WELCOME.get(language, _WELCOME["en"])
     await cl.Message(content=welcome_text, author="1337 AI").send()
 
+
 @cl.on_settings_update
 async def on_settings_update(settings: dict[str, Any]) -> None:
     """Persist the language preference when the user updates chat settings."""

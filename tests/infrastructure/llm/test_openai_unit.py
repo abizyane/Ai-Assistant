@@ -62,7 +62,7 @@ def test_build_messages_assistant_role(settings: Settings) -> None:
 async def test_do_generate_returns_result(settings: Settings) -> None:
     with patch(_PATCH_TARGET) as mock_cls:
         llm, mock_client = _make_openai(mock_cls, settings)
-        mock_client.ainvoke = AsyncMock(return_value=_ok_response("world"))
+        mock_client.bind.return_value.ainvoke = AsyncMock(return_value=_ok_response("world"))
         req = GenerationRequest(messages=[{"role": "user", "content": "q"}])
         result = await llm._do_generate(req)  # type: ignore[attr-defined]
     assert result.text == "world"
@@ -75,7 +75,7 @@ async def test_do_generate_no_usage_metadata(settings: Settings) -> None:
         llm, mock_client = _make_openai(mock_cls, settings)
         msg = AIMessage(content="ok")
         msg.usage_metadata = None  # type: ignore[assignment]
-        mock_client.ainvoke = AsyncMock(return_value=msg)
+        mock_client.bind.return_value.ainvoke = AsyncMock(return_value=msg)
         req = GenerationRequest(messages=[{"role": "user", "content": "q"}])
         result = await llm._do_generate(req)  # type: ignore[attr-defined]
     assert result.text == "ok"
@@ -153,7 +153,7 @@ async def test_do_stream_yields_tokens(settings: Settings) -> None:
             for token in ["Hello", " world"]:
                 yield AIMessage(content=token)
 
-        mock_client.astream = _fake_astream
+        mock_client.bind.return_value.astream = _fake_astream
         req = GenerationRequest(messages=[{"role": "user", "content": "q"}])
         tokens = [t async for t in llm._do_stream(req)]  # type: ignore[attr-defined]
     assert tokens == ["Hello", " world"]
