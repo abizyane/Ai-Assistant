@@ -1,5 +1,3 @@
-> ⚠️ PLACEHOLDER — replace with real 1337 docs.
-
 # Curriculum
 
 The 1337 Coding School curriculum is built on a project-based learning model that emphasizes peer collaboration and self-directed learning. Students progress through five distinct levels, each introducing increasingly complex programming concepts and real-world applications.

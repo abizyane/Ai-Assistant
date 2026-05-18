@@ -104,11 +104,6 @@ def get_metrics_output() -> str:
     return generate_latest(REGISTRY).decode()
 
 
-# ---------------------------------------------------------------------------
-# Pre-registered metrics (avoid duplicate registration on first request)
-# ---------------------------------------------------------------------------
-
-# HTTP request duration histogram — consumed by RequestLoggingMiddleware
 _get_or_create_histogram(
     "http_request_duration_seconds",
     ["method", "path", "status"],

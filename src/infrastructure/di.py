@@ -67,11 +67,6 @@ __all__ = [
 log = structlog.get_logger(__name__)
 
 
-# ---------------------------------------------------------------------------
-# Cached settings singleton
-# ---------------------------------------------------------------------------
-
-
 @lru_cache(maxsize=1)
 def build_settings() -> Settings:
     """Return singleton Settings loaded from environment / .env.
@@ -80,11 +75,6 @@ def build_settings() -> Settings:
         Cached ``Settings`` instance.
     """
     return Settings()
-
-
-# ---------------------------------------------------------------------------
-# Stateful singleton adapters (no-arg internal + public wrapper)
-# ---------------------------------------------------------------------------
 
 
 @lru_cache(maxsize=1)
@@ -158,11 +148,6 @@ def build_reranker(settings: Settings | None = None) -> BGEReranker:
     """
     del settings
     return _cached_reranker()
-
-
-# ---------------------------------------------------------------------------
-# Light (uncached) adapters
-# ---------------------------------------------------------------------------
 
 
 def build_llm(settings: Settings | None = None) -> LLMPort:
@@ -284,11 +269,6 @@ def build_session_repo(settings: Settings | None = None) -> SessionRepository:
     return SessionRepository(session_factory)
 
 
-# ---------------------------------------------------------------------------
-# Use cases (uncached — cheap and stateless)
-# ---------------------------------------------------------------------------
-
-
 def build_ingest_use_case(settings: Settings | None = None) -> IngestDocumentsUseCase:
     """Build the document ingestion use case with all dependencies wired.
 
@@ -385,11 +365,6 @@ def build_agent(settings: Settings | None = None) -> CompiledStateGraph:  # type
         grade_llm=grade_llm,
         settings=s,
     )
-
-
-# ---------------------------------------------------------------------------
-# Test helper
-# ---------------------------------------------------------------------------
 
 
 def _reset_caches() -> None:

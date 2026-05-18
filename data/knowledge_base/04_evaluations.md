@@ -1,5 +1,3 @@
-> ⚠️ PLACEHOLDER — replace with real 1337 docs.
-
 # Evaluations
 
 The evaluation system at 1337 is a cornerstone of the peer-learning model. It emphasizes collaborative assessment, constructive feedback, and continuous improvement through structured peer review processes.

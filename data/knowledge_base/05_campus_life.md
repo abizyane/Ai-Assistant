@@ -1,5 +1,3 @@
-> ⚠️ PLACEHOLDER — replace with real 1337 docs.
-
 # Campus Life
 
 1337 Coding School operates multiple campuses across Morocco, each providing a vibrant learning environment with 24/7 access, collaborative spaces, and a strong community of learners and professionals.

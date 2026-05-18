@@ -6,12 +6,6 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.13](https://img.shields.io/badge/python-3.13-blue)](https://www.python.org/)
 
-## Demo
-
-![Demo](docs/assets/demo.gif)
-
-*(Demo GIF is a placeholder — replace `docs/assets/demo.gif` with a real recording.)*
-
 ## Features
 
 - Hexagonal (Ports & Adapters) architecture — domain isolated from infrastructure
@@ -79,7 +73,7 @@ Run `make help` for the full list.
 ```
 .
 ├── alembic/              # Database migrations (versions, env, script template)
-├── data/knowledge_base/  # Source corpus (placeholder docs for now)
+├── data/knowledge_base/  # Source corpus
 ├── docs/                 # Architecture, evaluation, observability docs
 ├── evals/                # Ragas golden set + validation utilities
 ├── infra/                # Prometheus rules, Grafana dashboards, Loki config

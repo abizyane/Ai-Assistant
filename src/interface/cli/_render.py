@@ -29,11 +29,6 @@ __all__ = [
 console = Console()
 
 
-# ---------------------------------------------------------------------------
-# Progress helpers
-# ---------------------------------------------------------------------------
-
-
 def make_progress() -> Progress:
     """Return a Rich Progress instance with spinner, bar, and elapsed time.
 
@@ -48,11 +43,6 @@ def make_progress() -> Progress:
         TimeElapsedColumn(),
         console=console,
     )
-
-
-# ---------------------------------------------------------------------------
-# Answer rendering
-# ---------------------------------------------------------------------------
 
 
 def render_answer(text: str, citations: list[Any]) -> None:
@@ -89,11 +79,6 @@ def make_citation_table(citations: list[Any]) -> Table:
     return table
 
 
-# ---------------------------------------------------------------------------
-# Ingestion summary
-# ---------------------------------------------------------------------------
-
-
 def make_ingest_summary_table(
     files_processed: int,
     files_skipped: int,
@@ -124,11 +109,6 @@ def make_ingest_summary_table(
     return table
 
 
-# ---------------------------------------------------------------------------
-# Evaluation table
-# ---------------------------------------------------------------------------
-
-
 def make_eval_table(aggregate: dict[str, float], thresholds: dict[str, float]) -> Table:
     """Build a Rich Table of evaluation metric scores vs thresholds.
 
@@ -150,11 +130,6 @@ def make_eval_table(aggregate: dict[str, float], thresholds: dict[str, float]) -
         status = "[green]PASS[/green]" if passed else "[red]FAIL[/red]"
         table.add_row(metric, f"{score:.4f}", f"{threshold:.4f}", status)
     return table
-
-
-# ---------------------------------------------------------------------------
-# Sessions tables
-# ---------------------------------------------------------------------------
 
 
 def make_sessions_table(sessions: list[dict[str, Any]]) -> Table:
@@ -184,11 +159,6 @@ def make_sessions_table(sessions: list[dict[str, Any]]) -> Table:
             str(s.get("message_count", 0)),
         )
     return table
-
-
-# ---------------------------------------------------------------------------
-# Utility panels
-# ---------------------------------------------------------------------------
 
 
 def render_success(message: str) -> None:

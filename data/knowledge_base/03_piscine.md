@@ -1,5 +1,3 @@
-> ⚠️ PLACEHOLDER — replace with real 1337 docs.
-
 # Piscine
 
 The Piscine is a 26-day intensive bootcamp that serves as the selection and onboarding process for 1337 Coding School. It is a rigorous introduction to programming and the school's unique learning methodology.

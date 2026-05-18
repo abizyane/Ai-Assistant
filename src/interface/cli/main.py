@@ -57,11 +57,6 @@ app.add_typer(sessions_app, name="sessions")
 _EXIT_WORDS: frozenset[str] = frozenset({"bye", "exit", "quit"})
 
 
-# ---------------------------------------------------------------------------
-# ingest
-# ---------------------------------------------------------------------------
-
-
 @app.command()
 def ingest(
     path: Path = typer.Argument(..., help="Directory or file to ingest."),  # noqa: B008
@@ -123,11 +118,6 @@ def ingest(
         raise typer.Exit(code=1)
 
 
-# ---------------------------------------------------------------------------
-# chat
-# ---------------------------------------------------------------------------
-
-
 @app.command()
 def chat(
     query: str | None = typer.Argument(
@@ -178,11 +168,6 @@ def chat(
         asyncio.run(_ask(user_input))
 
 
-# ---------------------------------------------------------------------------
-# evaluate
-# ---------------------------------------------------------------------------
-
-
 @app.command()
 def evaluate(
     dataset: Path = typer.Argument(..., help="Path to JSONL evaluation dataset."),  # noqa: B008
@@ -225,11 +210,6 @@ def evaluate(
     render_success(f"All thresholds passed ({report.sample_size} rows evaluated).")
 
 
-# ---------------------------------------------------------------------------
-# health
-# ---------------------------------------------------------------------------
-
-
 @app.command()
 def health() -> None:
     """Check database connectivity and overall system health.
@@ -248,11 +228,6 @@ def health() -> None:
     except Exception as exc:
         render_error(f"Health check failed: {exc}")
         raise typer.Exit(code=1) from exc
-
-
-# ---------------------------------------------------------------------------
-# sessions subcommands
-# ---------------------------------------------------------------------------
 
 
 @sessions_app.command("list")
@@ -313,11 +288,6 @@ def sessions_show(
         table.add_row(role_val, msg.content, created)
 
     console.print(table)
-
-
-# ---------------------------------------------------------------------------
-# Entry point
-# ---------------------------------------------------------------------------
 
 
 def main() -> None:

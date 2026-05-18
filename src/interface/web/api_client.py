@@ -34,13 +34,8 @@ class RAGAPIClient:
         base_url: str = "http://localhost:8000",
         langfuse_base_url: str = "http://localhost:3000",
     ) -> None:
-        """Initialise the client with API and Langfuse base URLs."""
         self._base_url = base_url.rstrip("/")
         self._langfuse_base_url = langfuse_base_url.rstrip("/")
-
-    # ------------------------------------------------------------------
-    # URL helpers
-    # ------------------------------------------------------------------
 
     def langfuse_trace_url(self, trace_id: str) -> str:
         """Return Langfuse deep-link URL for a trace.
@@ -52,10 +47,6 @@ class RAGAPIClient:
             Fully-qualified Langfuse trace URL string.
         """
         return f"{self._langfuse_base_url}/trace/{trace_id}"
-
-    # ------------------------------------------------------------------
-    # Async API methods
-    # ------------------------------------------------------------------
 
     async def health(self) -> dict[str, Any]:
         """GET /health → health status dict.
