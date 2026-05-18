@@ -140,7 +140,7 @@ async def chat_sse(body: ChatRequest, agent: AgentDep) -> StreamingResponse:  # 
             citations = [
                 CitationOut(
                     chunk_id=c.chunk_id,
-                    source=c.source,
+                    source=Path(c.source).name,
                     page=c.page,
                     marker=c.marker,
                 ).model_dump()
@@ -173,7 +173,7 @@ async def chat_sync(body: ChatRequest, agent: AgentDep) -> SyncChatResponse:  # 
     citations = [
         CitationOut(
             chunk_id=c.chunk_id,
-            source=c.source,
+            source=Path(c.source).name,
             page=c.page,
             marker=c.marker,
         )

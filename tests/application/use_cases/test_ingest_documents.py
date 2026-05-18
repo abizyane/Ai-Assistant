@@ -278,7 +278,8 @@ async def test_metrics_emitted(
     file_calls = [c for c in mock_inc.call_args_list if c.args[0] == "ingestion_files_total"]
     chunk_calls = [c for c in mock_inc.call_args_list if c.args[0] == "ingestion_chunks_total"]
     assert len(file_calls) >= 1
-    assert len(chunk_calls) == report.chunks_created
+    assert len(chunk_calls) >= 1
+    assert sum(c.kwargs.get("amount", 1) for c in chunk_calls) == report.chunks_created
 
     assert mock_obs.called
     hist_calls = [c for c in mock_obs.call_args_list if c.args[0] == "ingestion_duration_seconds"]

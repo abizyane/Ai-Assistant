@@ -8,6 +8,7 @@ widget. Conversation history persists via data_persistence in config.toml.
 from __future__ import annotations
 
 import os
+import re
 import uuid
 from typing import Any
 
@@ -41,8 +42,10 @@ _WELCOME: dict[str, str] = {
         "Posez vos questions sur **l'\u00e9cole 1337** \u2014 admissions, la Piscine, la vie "
         "sur campus, les cursus ou la p\u00e9dagogie entre pairs.\n\n"
         "Je r\u00e9ponds en **anglais**, **fran\u00e7ais** et **العربية** \u2014 choisissez votre "
-        "langue dans le s\u00e9lecteur de profil ou modifiez-la dans les param\u00e8tres ci-dessous.\n\n"
-        "> Ancr\u00e9 dans la base de connaissances officielle de 1337 via un pipeline RAG multilingue."
+        "langue dans le s\u00e9lecteur de profil ou "
+        "modifiez-la dans les param\u00e8tres ci-dessous.\n\n"
+        "> Ancr\u00e9 dans la base de connaissances "
+        "officielle de 1337 via un pipeline RAG multilingue."
     ),
     "ar": (
         "## مساعد 1337 الذكي\n\n"
@@ -151,6 +154,15 @@ async def on_message(message: cl.Message) -> None:
         return
 
     await msg.update()
+
+    # Replace inline [marker] tokens with numbered references, then strip residuals.
+    if citations:
+        for i, cite in enumerate(citations, 1):
+            marker = cite.get("marker", "")
+            if marker:
+                msg.content = msg.content.replace(marker, f"[{i}]")
+        msg.content = re.sub(r"\[[a-zA-Z][a-zA-Z0-9_\-:]*\]", "", msg.content)
+        await msg.update()
 
     if citations:
         lines: list[str] = [t.get("citations_header", "**Sources**")]
